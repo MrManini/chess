@@ -243,20 +243,20 @@ function enablePieceMovement() {
                     const oldSquare = selectedPiece.parentElement;
                     oldSquare.removeChild(selectedPiece);
                     square.appendChild(selectedPiece);
-
-                    oldSquare.style.backgroundColor = "";
-                    selectedPiece = null;
                     
                     console.log(`moved to ${square.id}`);
                     sideToMove = (sideToMove === 'white') ? 'black' : 'white';
                     console.log(`${sideToMove} to move`);
-                    if (piece.classList.contains('king')){
-                        if (piece.classList.contains('white')){
+                    if (selectedPiece.classList.contains('king')){
+                        if (selectedPiece.classList.contains('white')){
                             whiteKingPosition = square.id;
                         } else {
                             blackKingPosition = square.id;
                         }
                     }
+
+                    oldSquare.style.backgroundColor = "";
+                    selectedPiece = null;
                     movesPlayed.push(move);
                     pgn.push(move.toString());
                     getAllLegalMoves();
