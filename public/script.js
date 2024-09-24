@@ -3,9 +3,13 @@ let selectedPiece = null;
 let sideToMove = "white";
 const selectedPieceColor = "#26995c";
 let legalMoves = [];
+let opponentMoves = [];
 let lastMove = null;
 let whiteAlivePieces = [];
 let blackAlivePieces = [];
+let whiteKingPosition = 'e1';
+let blackKingPosition = 'e8';
+let movesPlayed = [];
 let pgn = [];
 const pieceNotation = {
     pawn: '',
@@ -62,9 +66,7 @@ class Move {
     toString(){
         let move = "";
         let pieceType = this.piece.classList[1];
-        if (pieceType === 'pawn'){
-            move = this.from.id[0];
-        } else if(pieceType === 'king' && this.from.id[0] === 'e' && this.to.id[0] === 'g'){
+        if(pieceType === 'king' && this.from.id[0] === 'e' && this.to.id[0] === 'g'){
             move = 'O-O';
         } else if(pieceType === 'king' && this.from.id[0] === 'e' && this.to.id[0] === 'c'){
             move = 'O-O-O';
@@ -76,8 +78,10 @@ class Move {
             if (this.disambiguateRank){
                 move += this.disambiguateRank;
             }
-            if (this.isCapture){
+            if (this.isCapture && pieceType !== 'pawn'){
                 move += 'x';
+            } else if (this.isCapture && pieceType === 'pawn'){
+                move += this.from.id[0] + 'x';
             }
             move += this.to.id;
             if (this.isEnPassant){
@@ -174,9 +178,11 @@ function enablePieceMovement() {
             } else if (pieceColor != sideToMove && selectedPiece){
                 let move = new Move(selectedPiece, selectedPiece.parentElement, square);
                 move.setCapture();
-                const isLegalMove = legalMoves.some(legalMove => 
-                    Object.keys(move).every(key => move[key] === legalMove[key])
-                );
+                const isLegalMove = legalMoves.some(legalMove =>
+                    move.piece === legalMove.piece &&
+                    move.from.id === legalMove.from.id &&
+                    move.to.id === legalMove.to.id
+                );                
                 if (isLegalMove){
                     // Piece selected and clicked on piece of different color, capture piece
                     square.style.backgroundColor = "";
@@ -193,7 +199,15 @@ function enablePieceMovement() {
                     console.log(`captured on ${square.id}`);
                     sideToMove = (sideToMove === 'white') ? 'black' : 'white';
                     console.log(`${sideToMove} to move`);
-                    legalMoves = [];
+                    if (piece.classList.contains('king')){
+                        if (piece.classList.contains('white')){
+                            whiteKingPosition = square.id;
+                        } else {
+                            blackKingPosition = square.id;
+                        }
+                    }
+                    movesPlayed.push(move);
+                    pgn.push(move.toString());
                     getAllLegalMoves();
                 } else {
                     // Piece selected and clicked on piece of different color, but not a legal move
@@ -219,9 +233,11 @@ function enablePieceMovement() {
             if (selectedPiece) {
                 let move = new Move(selectedPiece, selectedPiece.parentElement, square);
                 console.log(move);
-                const isLegalMove = legalMoves.some(legalMove => 
-                    Object.keys(move).every(key => move[key] === legalMove[key])
-                );
+                const isLegalMove = legalMoves.some(legalMove =>
+                    move.piece === legalMove.piece &&
+                    move.from.id === legalMove.from.id &&
+                    move.to.id === legalMove.to.id
+                );                
                 if (isLegalMove){
                     // If a piece is selected, then a square is clicked, the piece moves to that square
                     const oldSquare = selectedPiece.parentElement;
@@ -233,8 +249,16 @@ function enablePieceMovement() {
                     
                     console.log(`moved to ${square.id}`);
                     sideToMove = (sideToMove === 'white') ? 'black' : 'white';
-                    console.log(`${sideToMove} to move`);   
-                    legalMoves = [];
+                    console.log(`${sideToMove} to move`);
+                    if (piece.classList.contains('king')){
+                        if (piece.classList.contains('white')){
+                            whiteKingPosition = square.id;
+                        } else {
+                            blackKingPosition = square.id;
+                        }
+                    }
+                    movesPlayed.push(move);
+                    pgn.push(move.toString());
                     getAllLegalMoves();
                 } else {
                     // If a piece is selected, then a square is clicked, but it's not a legal move
@@ -268,7 +292,7 @@ function getAllLegalMoves(){
             getLegalMoves(piece);
         });
     }
-    console.log(legalMoves);
+    console.log(pgn);
 }
 
 function getLegalMoves(piece) {
@@ -276,7 +300,7 @@ function getLegalMoves(piece) {
     const square = piece.parentElement;
     switch (pieceType) {
         case 'pawn':
-            getLegalPawnMoves(piece, square);
+            legalMoves.concat(getLegalPawnMoves(piece, square));
             break;
         case 'rook':
             getLegalRookMoves(piece, square);
@@ -359,76 +383,27 @@ function isLegalLinearMove(piece, toFile, toRank){
     return false;
 }
 
-function getLegalRookMoves(piece, fromSquare){
+function getLinearMoves(piece, fromSquare, directions) {
     const [fromFile, fromRank] = getPosition(fromSquare);
-    for (let file = fromFile - 1; file >= 0; file--){ // Move horizontally to the left
-        let keepSearching = isLegalLinearMove(piece, file, fromRank);
-        if (!keepSearching){
-            break;
+    directions.forEach(direction => {
+        let file = fromFile + direction[0];
+        let rank = fromRank + direction[1];
+        while (file >= 0 && file <= 7 && rank >= 1 && rank <= 8) {
+            let keepSearching = isLegalLinearMove(piece, file, rank);
+            if (!keepSearching) break;
+            file += direction[0];
+            rank += direction[1];
         }
-    }
-    for (let file = fromFile + 1; file <= 7; file++){ // Move horizontally to the right
-        let keepSearching = isLegalLinearMove(piece, file, fromRank);
-        if (!keepSearching){
-            break;
-        }
-    }
-    for (let rank = fromRank - 1; rank >= 1; rank--){ // Move vertically down
-        let keepSearching = isLegalLinearMove(piece, fromFile, rank);
-        if (!keepSearching){
-            break;
-        }
-    }
-    for (let rank = fromRank + 1; rank <= 8; rank++){ // Move vertically up
-        let keepSearching = isLegalLinearMove(piece, fromFile, rank);
-        if (!keepSearching){
-            break;
-        }
-    }
+    });
+}
+
+
+function getLegalRookMoves(piece, fromSquare){
+    getLinearMoves(piece, fromSquare, [[0, 1], [0, -1], [1, 0], [-1, 0]]);
 }
 
 function getLegalBishopMoves(piece, fromSquare){
-    const [fromFile, fromRank] = getPosition(fromSquare);
-    let file = fromFile + 1;
-    let rank = fromRank + 1;
-    while (file <= 7 && rank <= 8){ // Move diagonally up and to the right
-        let keepSearching = isLegalLinearMove(piece, file, rank);
-        if (!keepSearching){
-            break;
-        }
-        file++;
-        rank++;
-    }
-    file = fromFile + 1;
-    rank = fromRank - 1;
-    while (file <= 7 && rank >= 1){ // Move diagonally down and to the right
-        let keepSearching = isLegalLinearMove(piece, file, rank);
-        if (!keepSearching){
-            break;
-        }
-        file++;
-        rank--;
-    }
-    file = fromFile - 1;
-    rank = fromRank + 1;
-    while (file >= 0 && rank <= 8){ // Move diagonally up and to the left
-        let keepSearching = isLegalLinearMove(piece, file, rank);
-        if (!keepSearching){
-            break;
-        }
-        file--;
-        rank++;
-    }
-    file = fromFile - 1;
-    rank = fromRank - 1;
-    while (file >= 0 && rank >= 1){ // Move diagonally down and to the left
-        let keepSearching = isLegalLinearMove(piece, file, rank);
-        if (!keepSearching){
-            break;
-        }
-        file--;
-        rank--;
-    }
+    getLinearMoves(piece, fromSquare, [[1, 1], [1, -1], [-1, 1], [-1, -1]]);
 }
 
 function getLegalKnightMoves(piece, fromSquare){
