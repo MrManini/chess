@@ -2,8 +2,8 @@ const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
 let selectedPiece = null;
 let sideToMove = "white";
 const selectedPieceColor = "#26995c";
-let legalMoves = [];
-let opponentMoves = [];
+let whiteLegalMoves = [];
+let blackLegalMoves = [];
 let lastMove = null;
 let whiteAlivePieces = [];
 let blackAlivePieces = [];
@@ -178,11 +178,20 @@ function enablePieceMovement() {
             } else if (pieceColor != sideToMove && selectedPiece){
                 let move = new Move(selectedPiece, selectedPiece.parentElement, square);
                 move.setCapture();
-                const isLegalMove = legalMoves.some(legalMove =>
-                    move.piece === legalMove.piece &&
-                    move.from.id === legalMove.from.id &&
-                    move.to.id === legalMove.to.id
-                );                
+                let isLegalMove = false;
+                if (piece.classList.contains('white')){
+                    isLegalMove = whiteLegalMoves.some(legalMove =>
+                        move.piece === legalMove.piece &&
+                        move.from.id === legalMove.from.id &&
+                        move.to.id === legalMove.to.id
+                    ); 
+                } else {
+                    isLegalMove = blackLegalMoves.some(legalMove =>
+                        move.piece === legalMove.piece &&
+                        move.from.id === legalMove.from.id &&
+                        move.to.id === legalMove.to.id
+                    ); 
+                }  
                 if (isLegalMove){
                     // Piece selected and clicked on piece of different color, capture piece
                     square.style.backgroundColor = "";
@@ -233,11 +242,20 @@ function enablePieceMovement() {
             if (selectedPiece) {
                 let move = new Move(selectedPiece, selectedPiece.parentElement, square);
                 console.log(move);
-                const isLegalMove = legalMoves.some(legalMove =>
-                    move.piece === legalMove.piece &&
-                    move.from.id === legalMove.from.id &&
-                    move.to.id === legalMove.to.id
-                );                
+                let isLegalMove = false;
+                if (selectedPiece.classList.contains('white')){
+                    isLegalMove = whiteLegalMoves.some(legalMove =>
+                        move.piece === legalMove.piece &&
+                        move.from.id === legalMove.from.id &&
+                        move.to.id === legalMove.to.id
+                    ); 
+                } else {
+                    isLegalMove = blackLegalMoves.some(legalMove =>
+                        move.piece === legalMove.piece &&
+                        move.from.id === legalMove.from.id &&
+                        move.to.id === legalMove.to.id
+                    ); 
+                }             
                 if (isLegalMove){
                     // If a piece is selected, then a square is clicked, the piece moves to that square
                     const oldSquare = selectedPiece.parentElement;
@@ -282,16 +300,14 @@ function getPosition(square) {
 }
 
 function getAllLegalMoves(){
-    legalMoves = [];
-    if (sideToMove === 'white'){
-        whiteAlivePieces.forEach(function(piece){
-            getLegalMoves(piece);
-        });
-    } else {
-        blackAlivePieces.forEach(function(piece){
-            getLegalMoves(piece);
-        });
-    }
+    whiteLegalMoves = [];
+    blackLegalMoves = [];
+    whiteAlivePieces.forEach(function(piece){
+        getLegalMoves(piece);
+    });
+    blackAlivePieces.forEach(function(piece){
+        getLegalMoves(piece);
+    });
     console.log(pgn);
 }
 
@@ -329,8 +345,12 @@ function getLegalPawnMoves(piece, fromSquare){ // TODO en passant and promotion
         !toSquare.hasChildNodes() &&        // No piece on the target square
         !blundersCheck()                    // Doesn't put the king in check
     ){
-        let move = new Move(piece, fromSquare, toSquare);
-        legalMoves.push(move);          // Pawn moves one square forward
+        let move = new Move(piece, fromSquare, toSquare); // Pawn moves one square forward
+        if (piece.classList.contains('white')){
+            whiteLegalMoves.push(move);
+        } else {
+            blackLegalMoves.push(move);
+        }
     }
     toSquare = document.getElementById(files[fromFile] + (parseInt(fromRank) + 2 * direction));
     // Two squares forward
@@ -339,8 +359,12 @@ function getLegalPawnMoves(piece, fromSquare){ // TODO en passant and promotion
         !toSquare.hasChildNodes() &&            // No piece on the target square
         !blundersCheck()                        // Doesn't put the king in check
     ){
-        let move = new Move(piece, fromSquare, toSquare);
-        legalMoves.push(move);          // Pawn moves two squares forward
+        let move = new Move(piece, fromSquare, toSquare);  // Pawn moves two squares forward    
+        if (piece.classList.contains('white')){
+            whiteLegalMoves.push(move);
+        } else {
+            blackLegalMoves.push(move);
+        }
     }
     toSquare = document.getElementById(files[fromFile - direction] + (parseInt(fromRank) + direction));
     // One file to the left, one square forward
@@ -349,9 +373,13 @@ function getLegalPawnMoves(piece, fromSquare){ // TODO en passant and promotion
         toSquare.hasChildNodes() &&         // Piece on the target square
         !blundersCheck()                    // Doesn't put the king in check
     ){
-        let move = new Move(piece, fromSquare, toSquare);
+        let move = new Move(piece, fromSquare, toSquare);  // Pawn moves two squares forward
         move.setCapture();
-        legalMoves.push(move);          // Pawn captures to the left
+        if (piece.classList.contains('white')){
+            whiteLegalMoves.push(move);
+        } else {
+            blackLegalMoves.push(move);
+        }         
     }
     toSquare = document.getElementById(files[fromFile + direction] + (parseInt(fromRank) + direction));
     // One file to the right, one square forward
@@ -360,9 +388,13 @@ function getLegalPawnMoves(piece, fromSquare){ // TODO en passant and promotion
         toSquare.hasChildNodes() &&         // Piece on the target square
         !blundersCheck()                    // Doesn't put the king in check
     ){
-        let move = new Move(piece, fromSquare, toSquare);
+        let move = new Move(piece, fromSquare, toSquare);   // Pawn captures to the right
         move.setCapture();
-        legalMoves.push(move);          // Pawn captures to the right
+        if (piece.classList.contains('white')){
+            whiteLegalMoves.push(move);
+        } else {
+            blackLegalMoves.push(move);
+        }     
     }
 }
 
@@ -371,12 +403,20 @@ function isLegalLinearMove(piece, toFile, toRank){
     let move = new Move(piece, piece.parentElement, square);
     if (!square.hasChildNodes()){
         // No piece on the target square, add move and keep searching
-        legalMoves.push(move);
+        if (piece.classList.contains('white')){
+            whiteLegalMoves.push(move);
+        } else {
+            blackLegalMoves.push(move);
+        }  
         return true;
     } else if (square.firstChild.classList[0] !== piece.classList[0] ){
         // Piece of the opposite color on the target square, add move and stop searching
         move.setCapture();
-        legalMoves.push(move);
+        if (piece.classList.contains('white')){
+            whiteLegalMoves.push(move);
+        } else {
+            blackLegalMoves.push(move);
+        }
         return false;
     }
     // Piece of the same color on the target square, stop searching
@@ -421,11 +461,19 @@ function getLegalKnightMoves(piece, fromSquare){
             let move = new Move(piece, fromSquare, square);
             if (square && !square.hasChildNodes()){
                 // No piece on the target square or piece of the opposite color, add move
-                legalMoves.push(move);
+                if (piece.classList.contains('white')){
+                    whiteLegalMoves.push(move);
+                } else {
+                    blackLegalMoves.push(move);
+                }  
             } else if (square.firstChild.classList[0] !== piece.classList[0]){
                 // Piece of the opposite color on the target square, add capture
                 move.setCapture();
-                legalMoves.push(move);
+                if (piece.classList.contains('white')){
+                    whiteLegalMoves.push(move);
+                } else {
+                    blackLegalMoves.push(move);
+                }  
             }
         }
     });
@@ -451,14 +499,26 @@ function getLegalKingMoves(piece, fromSquare){ // TODO castling
             let move = new Move(piece, fromSquare, square);
             if (square && !square.hasChildNodes()){
                 // No piece on the target square or piece of the opposite color, add move
-                legalMoves.push(move);
+                if (piece.classList.contains('white')){
+                    whiteLegalMoves.push(move);
+                } else {
+                    blackLegalMoves.push(move);
+                }  
             } else if (square.firstChild.classList[0] !== piece.classList[0]){
                 // Piece of the opposite color on the target square, add capture
                 move.setCapture();
-                legalMoves.push(move);
+                if (piece.classList.contains('white')){
+                    whiteLegalMoves.push(move);
+                } else {
+                    blackLegalMoves.push(move);
+                }  
             }
         }
     });
+}
+
+function disallowIllegalKingMoves(piece){ //TODO
+
 }
 
 function blundersCheck(){ //TODO check function
