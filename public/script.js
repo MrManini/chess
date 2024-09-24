@@ -300,7 +300,7 @@ function getLegalMoves(piece) {
     const square = piece.parentElement;
     switch (pieceType) {
         case 'pawn':
-            legalMoves.concat(getLegalPawnMoves(piece, square));
+            getLegalPawnMoves(piece, square);
             break;
         case 'rook':
             getLegalRookMoves(piece, square);
