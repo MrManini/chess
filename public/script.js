@@ -45,6 +45,16 @@ class Piece {
     
         targetSquareElement.appendChild(pieceImg);
         sideToMove = (sideToMove === 'white') ? 'black' : 'white';
+        
+        selectedPiece = null;
+        movesPlayed.push(move);
+        pgn.push(move.toString());
+        getAllLegalMoves();
+    }
+
+    capture(piece) {
+        piece.die();
+        this.move(piece.square);
     }
 
     checkLegalMove(move){
@@ -155,6 +165,7 @@ class Pawn extends Piece {
                 blackLegalMoves.push(move);
             }     
         }
+
     }
 
 }
@@ -488,8 +499,7 @@ function enablePieceMovement() {
                 let isLegalMove = selectedPiece.checkLegalMove(move);
                 
                 if (isLegalMove) {
-                    piece.die();
-                    selectedPiece.move(piece.square);
+                    selectedPiece.capture(piece);
                     console.log(`Captured ${piece.type} on ${piece.square.id}`);
                     getAllLegalMoves();
                 } else {
@@ -532,11 +542,6 @@ function enablePieceMovement() {
                             blackKingPosition = square.id;
                         }
                     }
-
-                    selectedPiece = null;
-                    movesPlayed.push(move);
-                    pgn.push(move.toString());
-                    getAllLegalMoves();
                 } else {
                     // If a piece is selected, then a square is clicked, but it's not a legal move
                     const selectedSquare = document.getElementById(selectedPiece.square.id);
