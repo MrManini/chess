@@ -29,9 +29,8 @@ class Piece {
         this.attackingSquares = [];
     }
 
-    move(toSquare, capture = false) {
+    move(toSquare, capture = false, enPassant = false) {
         const currentSquare = document.getElementById(this.square.id);
-        console.log(this.square);
         const targetSquareElement = document.getElementById(toSquare.id);
         const pieceImg = currentSquare.firstChild;
     
@@ -41,6 +40,9 @@ class Piece {
         const move = new Move(this, this.square, toSquare);
         if (capture) {
             move.setCapture();
+        }
+        if (enPassant) {
+            move.setEnPassant();
         }
         if (this.type === 'king' || this.type === 'rook'){
             this.hasMoved = true;
@@ -57,13 +59,16 @@ class Piece {
         movesPlayed.push(move);
         pgn.push(move.toString());
         console.log(pgn);
-        console.log(movesPlayed);
+        lastMove = move;
         getAllLegalMoves();
     }
 
     capture(piece) {
         piece.die();
         this.move(piece.square, true);
+    }
+
+    captureEnPassant(pawn){
     }
 
     checkLegalMove(move){
@@ -107,6 +112,13 @@ class Piece {
 class Pawn extends Piece {
     constructor(color, square){
         super('pawn', color, square);
+    }
+
+    captureEnPassant(pawn){
+        const direction = this.color === 'white' ? 1 : -1;
+        const toSquare = squares[pawn.square.file + (parseInt(pawn.square.rank) + direction)];
+        this.move(toSquare, true, true);
+        pawn.die();
     }
 
     getLegalMoves(){ // TODO en passant and promotion
@@ -158,6 +170,26 @@ class Pawn extends Piece {
                 blackLegalMoves.push(move);
             }         
         }
+        if (
+            lastMove &&                                                 // There was a last move
+            lastMove.piece.type === 'pawn' &&                           // The last move was a pawn move
+            Math.abs(lastMove.from.rank - lastMove.to.rank) === 2 &&    // The pawn moved two squares forward
+            toSquare &&                                                 // Square to the left is not null
+            toSquare.isEmpty() &&                                       // No piece on the target square
+            lastMove.to.file === files[fromFile - direction] &&         // The pawn moved to the square to the left of the current pawn
+            lastMove.to.rank === fromRank &&                            // The pawn moved to the same rank as the current pawn
+            !blundersCheck()                                            // Doesn't put the king in check
+        ){
+            let move = new Move(this, this.square, toSquare);   // Pawn captures en passant to the left
+            move.setCapture();
+            move.setEnPassant();
+            this.legalMoves.push(move);
+            if (this.color === 'white'){
+                whiteLegalMoves.push(move);
+            } else {
+                blackLegalMoves.push(move);
+            }  
+        }
         toSquare = squares[files[fromFile + direction] + (parseInt(fromRank) + direction)];
         // One file to the right, one square forward
         if (
@@ -174,9 +206,27 @@ class Pawn extends Piece {
                 blackLegalMoves.push(move);
             }     
         }
-
+        if (
+            lastMove &&                                                 // There was a last move
+            lastMove.piece.type === 'pawn' &&                           // The last move was a pawn move
+            Math.abs(lastMove.from.rank - lastMove.to.rank) === 2 &&    // The pawn moved two squares forward
+            toSquare &&                                                 // Square to the right is not null
+            toSquare.isEmpty() &&                                       // No piece on the target square
+            lastMove.to.file === files[fromFile + direction] &&         // The pawn moved to the square to the right of the current pawn
+            lastMove.to.rank === fromRank &&                            // The pawn moved to the same rank as the current pawn
+            !blundersCheck()                                            // Doesn't put the king in check
+        ){
+            let move = new Move(this, this.square, toSquare);   // Pawn captures en passant to the right
+            move.setCapture();
+            move.setEnPassant();
+            this.legalMoves.push(move);
+            if (this.color === 'white'){
+                whiteLegalMoves.push(move);
+            } else {
+                blackLegalMoves.push(move);
+            }  
+        }
     }
-
 }
 
 class Rook extends Piece {
@@ -341,6 +391,7 @@ class Move {
         this.isCheck = false;
         this.isCheckmate = false;
         this.isEnPassant = false;
+        this.enPassantPawn = null;
         this.piecePromoted = null;
         this.disambiguateFile = null;
         this.disambiguateRank = null;
@@ -360,6 +411,10 @@ class Move {
 
     setEnPassant(){
         this.isEnPassant = true;
+        const toSquare = this.to;
+        const direction = this.piece.color === 'white' ? 1 : -1;
+        const enPassantSquare = squares[toSquare.file + (parseInt(toSquare.rank) - direction)];
+        this.enPassantPawn = enPassantSquare.piece;
     }
 
     setPromotion(piece){
@@ -394,9 +449,11 @@ class Move {
             } else if (this.isCapture && pieceType === 'pawn'){
                 move += this.from.id[0] + 'x';
             }
-            move += this.to.id;
             if (this.isEnPassant){
+                move += this.enPassantPawn.square.id;
                 move += ' e.p.';
+            } else {
+                move += this.to.id;
             }
             if (this.piecePromoted){
                 move += '=' + pieceNotation[this.piecePromoted];
@@ -528,20 +585,30 @@ function enablePieceMovement() {
                 const square = squares[squareImg.id];
                 let move = new Move(selectedPiece, selectedPiece.square, square);
                 let isLegalMove = false;
+                let enPassantMove = null;
                 if (selectedPiece.color === 'white'){
                     isLegalMove = whiteLegalMoves.some(legalMove =>
                         move.piece === legalMove.piece &&
                         move.from.id === legalMove.from.id &&
                         move.to.id === legalMove.to.id
                     ); 
+                    enPassantMove = whiteLegalMoves.find(legalMove => legalMove.isEnPassant);
                 } else {
                     isLegalMove = blackLegalMoves.some(legalMove =>
                         move.piece === legalMove.piece &&
                         move.from.id === legalMove.from.id &&
                         move.to.id === legalMove.to.id
                     ); 
-                }             
-                if (isLegalMove){
+                    enPassantMove = blackLegalMoves.find(legalMove => legalMove.isEnPassant);
+                }
+                if (enPassantMove &&
+                    move.piece === enPassantMove.piece &&
+                    move.from === enPassantMove.from &&
+                    move.to === enPassantMove.to
+                ){
+                    selectedPiece.captureEnPassant(enPassantMove.enPassantPawn);
+                    console.log(`Captured en passant ${enPassantMove.piece.type} on ${enPassantMove.piece.square.id}`);
+                } else if (isLegalMove){
                     // If a piece is selected, then a square is clicked, the piece moves to that square
                     selectedPiece.move(square);
                     console.log(`moved to ${square.id}`);
