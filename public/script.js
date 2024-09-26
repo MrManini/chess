@@ -8,8 +8,6 @@ let blackLegalMoves = [];
 let lastMove = null;
 let whiteAlivePieces = [];
 let blackAlivePieces = [];
-let whiteKingPosition = 'e1';
-let blackKingPosition = 'e8';
 let movesPlayed = [];
 let pgn = [];
 const pieceNotation = {
@@ -31,30 +29,41 @@ class Piece {
         this.attackingSquares = [];
     }
 
-    move(toSquare) {
+    move(toSquare, capture = false) {
         const currentSquare = document.getElementById(this.square.id);
+        console.log(this.square);
         const targetSquareElement = document.getElementById(toSquare.id);
         const pieceImg = currentSquare.firstChild;
     
         currentSquare.removeChild(pieceImg);
         currentSquare.style.backgroundColor = "";
         
+        const move = new Move(this, this.square, toSquare);
+        if (capture) {
+            move.setCapture();
+        }
+        if (this.type === 'king' || this.type === 'rook'){
+            this.hasMoved = true;
+        }
+
         this.square.removePiece();
         this.square = toSquare;
         toSquare.placePiece(this);
     
         targetSquareElement.appendChild(pieceImg);
         sideToMove = (sideToMove === 'white') ? 'black' : 'white';
-        
+
         selectedPiece = null;
         movesPlayed.push(move);
         pgn.push(move.toString());
+        console.log(pgn);
+        console.log(movesPlayed);
         getAllLegalMoves();
     }
 
     capture(piece) {
         piece.die();
-        this.move(piece.square);
+        this.move(piece.square, true);
     }
 
     checkLegalMove(move){
@@ -173,6 +182,7 @@ class Pawn extends Piece {
 class Rook extends Piece {
     constructor(color, square){
         super('rook', color, square);
+        this.hasMoved = false;
     }
 
     getLegalMoves(){
@@ -249,6 +259,7 @@ class Queen extends Piece {
 class King extends Piece {
     constructor(color, square){
         super('king', color, square);
+        this.hasMoved = false;
     }
 
     getLegalMoves(){
@@ -535,13 +546,6 @@ function enablePieceMovement() {
                     selectedPiece.move(square);
                     console.log(`moved to ${square.id}`);
                     console.log(`${sideToMove} to move`);
-                    if (selectedPiece.type === 'king'){
-                        if (selectedPiece.color === 'white'){
-                            whiteKingPosition = square.id;
-                        } else {
-                            blackKingPosition = square.id;
-                        }
-                    }
                 } else {
                     // If a piece is selected, then a square is clicked, but it's not a legal move
                     const selectedSquare = document.getElementById(selectedPiece.square.id);
