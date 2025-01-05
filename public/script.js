@@ -3,6 +3,8 @@ let squares = {};
 let selectedPiece = null;
 let sideToMove = "white";
 const selectedPieceColor = "#26995c";
+let whitePossibleMoves = [];
+let blackPossibleMoves = [];
 let whiteLegalMoves = [];
 let blackLegalMoves = [];
 let lastMove = null;
@@ -13,6 +15,8 @@ let pgn = [];
 let possiblePromotionMove = null;
 let whitePromotionMenu = document.getElementById('white-promotion');
 let blackPromotionMenu = document.getElementById('black-promotion');
+let whiteKing = null;
+let blackKing = null;
 const pieceNotation = {
     pawn: '',
     rook: 'R',
@@ -28,6 +32,7 @@ class Piece {
         this.color = color;
         this.square = square;
         this.img = `images/${type}-${color}.svg`;
+        this.moves = [];
         this.legalMoves = [];
         this.attackingSquares = [];
     }
@@ -78,6 +83,11 @@ class Piece {
         console.log(pgn);
         lastMove = move;
         getAllLegalMoves();
+        if (whiteKing.isInCheck()){
+            console.log("White is in check");
+        } else if (blackKing.isInCheck()){
+            console.log("Black is in check");
+        }
     }
 
     capture(piece) {
@@ -97,7 +107,7 @@ class Piece {
         return isLegalMove;
     }
 
-    getLegalMoves() {
+    getPossibleMoves() {
     }
     
     getImg() {
@@ -152,88 +162,69 @@ class Pawn extends Piece {
         // Reattach event listener to the new piece's image element
         newPieceElement.addEventListener('click', handlePieceClick);
         square.placePiece(piece);
-        piece.getLegalMoves();
     }
 
-    getLegalMoves(){
+    getPossibleMoves(){
         const [fromFile, fromRank] = [files.indexOf(this.square.file), this.square.rank];
-        this.legalMoves = [];
+        this.moves = [];
         const direction = this.color === 'white' ? 1 : -1; // White moves "up", black "down"
         let toSquare = squares[files[fromFile] + (parseInt(fromRank) + direction)];
         // One square forward
         if ( 
-            toSquare.isEmpty() &&   // No piece on the target square
-            !blundersCheck()        // Doesn't put the king in check
+            toSquare.isEmpty()   // No piece on the target square
         ){
             let move = new Move(this, this.square, toSquare); // Pawn moves one square forward
             if (toSquare.rank === 1 || toSquare.rank === 8){
                 move.setPromotion('queen');
-                this.legalMoves.push(move);
+                this.moves.push(move);
                 move = new Move(this, this.square, toSquare);
                 move.setPromotion('rook');
-                this.legalMoves.push(move);
+                this.moves.push(move);
                 move = new Move(this, this.square, toSquare);
                 move.setPromotion('bishop');
-                this.legalMoves.push(move);
+                this.moves.push(move);
                 move = new Move(this, this.square, toSquare);
                 move.setPromotion('knight');
-                this.legalMoves.push(move);
+                this.moves.push(move);
             } else {
-                this.legalMoves.push(move);
-            }
-            if (this.color === 'white'){
-                whiteLegalMoves.push(move);
-            } else {
-                blackLegalMoves.push(move);
+                this.moves.push(move);
             }
         }
         toSquare = squares[files[fromFile] + (parseInt(fromRank) + 2 * direction)];
         // Two squares forward
         if (
             fromRank === (this.color === 'white' ? 2 : 7) &&  // Pawn is on the second (white) or seventh (black) rank
-            toSquare.isEmpty() &&   // No piece on the target square
-            !blundersCheck()        // Doesn't put the king in check
+            toSquare.isEmpty()   // No piece on the target square
         ){
             let move = new Move(this, this.square, toSquare);  // Pawn moves two squares forward    
-            this.legalMoves.push(move);
-            if (this.color === 'white'){
-                whiteLegalMoves.push(move);
-            } else {
-                blackLegalMoves.push(move);
-            }
+            this.moves.push(move);
         }
         toSquare = squares[files[fromFile - direction] + (parseInt(fromRank) + direction)];
         // One file to the left, one square forward
         if (
-            toSquare &&                         // Square to the left is not null
-            toSquare.isOccupiedByEnemy() &&     // Enemy piece on the target square
-            !blundersCheck()                    // Doesn't put the king in check
+            toSquare &&                                   // Square to the left is not null
+            toSquare.isOccupiedByEnemy(this.color)        // Enemy piece on the target square
         ){
             let move = new Move(this, this.square, toSquare);  // Pawn captures to the left
             move.setCapture();
             if (toSquare.rank === 1 || toSquare.rank === 8){
                 move.setPromotion('queen');
-                this.legalMoves.push(move);
+                this.moves.push(move);
                 move = new Move(this, this.square, toSquare);
                 move.setPromotion('rook');
                 move.setCapture();
-                this.legalMoves.push(move);
+                this.moves.push(move);
                 move = new Move(this, this.square, toSquare);
                 move.setPromotion('bishop');
                 move.setCapture();
-                this.legalMoves.push(move);
+                this.moves.push(move);
                 move = new Move(this, this.square, toSquare);
                 move.setPromotion('knight');
                 move.setCapture();
-                this.legalMoves.push(move);
+                this.moves.push(move);
             } else {
-                this.legalMoves.push(move);
-            }
-            if (this.color === 'white'){
-                whiteLegalMoves.push(move);
-            } else {
-                blackLegalMoves.push(move);
-            }         
+                this.moves.push(move);
+            }     
         }
         if (
             lastMove &&                                                 // There was a last move
@@ -242,51 +233,39 @@ class Pawn extends Piece {
             toSquare &&                                                 // Square to the left is not null
             toSquare.isEmpty() &&                                       // No piece on the target square
             lastMove.to.file === files[fromFile - direction] &&         // The pawn moved to the square to the left of the current pawn
-            lastMove.to.rank === fromRank &&                            // The pawn moved to the same rank as the current pawn
-            !blundersCheck()                                            // Doesn't put the king in check
+            lastMove.to.rank === fromRank                               // The pawn moved to the same rank as the current pawn
         ){
             let move = new Move(this, this.square, toSquare);   // Pawn captures en passant to the left
             move.setCapture();
             move.setEnPassant();
-            this.legalMoves.push(move);
-            if (this.color === 'white'){
-                whiteLegalMoves.push(move);
-            } else {
-                blackLegalMoves.push(move);
-            }  
+            this.moves.push(move);
         }
         toSquare = squares[files[fromFile + direction] + (parseInt(fromRank) + direction)];
         // One file to the right, one square forward
         if (
-            toSquare &&                         // Square to the right is not null
-            toSquare.isOccupiedByEnemy() &&     // Enemy piece on the target square
-            !blundersCheck()                    // Doesn't put the king in check
+            toSquare &&                                    // Square to the right is not null
+            toSquare.isOccupiedByEnemy(this.color)         // Enemy piece on the target square
         ){
             let move = new Move(this, this.square, toSquare);   // Pawn captures to the right
             move.setCapture();
             if (toSquare.rank === 1 || toSquare.rank === 8){
                 move.setPromotion('queen');
-                this.legalMoves.push(move);
+                this.moves.push(move);
                 move = new Move(this, this.square, toSquare);
                 move.setPromotion('rook');
                 move.setCapture();
-                this.legalMoves.push(move);
+                this.moves.push(move);
                 move = new Move(this, this.square, toSquare);
                 move.setPromotion('bishop');
                 move.setCapture();
-                this.legalMoves.push(move);
+                this.moves.push(move);
                 move = new Move(this, this.square, toSquare);
                 move.setPromotion('knight');
                 move.setCapture();
-                this.legalMoves.push(move);
+                this.moves.push(move);
             } else {
-                this.legalMoves.push(move);
+                this.moves.push(move);
             }
-            if (this.color === 'white'){
-                whiteLegalMoves.push(move);
-            } else {
-                blackLegalMoves.push(move);
-            }     
         }
         if (
             lastMove &&                                                 // There was a last move
@@ -295,18 +274,12 @@ class Pawn extends Piece {
             toSquare &&                                                 // Square to the right is not null
             toSquare.isEmpty() &&                                       // No piece on the target square
             lastMove.to.file === files[fromFile + direction] &&         // The pawn moved to the square to the right of the current pawn
-            lastMove.to.rank === fromRank &&                            // The pawn moved to the same rank as the current pawn
-            !blundersCheck()                                            // Doesn't put the king in check
+            lastMove.to.rank === fromRank                               // The pawn moved to the same rank as the current pawn
         ){
             let move = new Move(this, this.square, toSquare);   // Pawn captures en passant to the right
             move.setCapture();
             move.setEnPassant();
-            this.legalMoves.push(move);
-            if (this.color === 'white'){
-                whiteLegalMoves.push(move);
-            } else {
-                blackLegalMoves.push(move);
-            }  
+            this.moves.push(move);  
         }
     }
 }
@@ -315,25 +288,11 @@ class Rook extends Piece {
     constructor(color, square){
         super('rook', color, square);
         this.hasMoved = false;
-        this.isRealRook = true;
     }
 
-    setFalseRook(){
-        this.isRealRook = false;
-    }
-
-    getLegalMoves(){
-        this.legalMoves = [];
+    getPossibleMoves(){
+        this.moves = [];
         getLinearMoves(this, this.square, [[0, 1], [0, -1], [1, 0], [-1, 0]]);
-        if (this.isRealRook){
-            this.legalMoves.forEach(move => {
-                if (this.color === 'white'){
-                    whiteLegalMoves.push(move);
-                } else {
-                    blackLegalMoves.push(move);
-                }
-            });
-        }
     }
 }
 
@@ -342,8 +301,8 @@ class Knight extends Piece {
         super('knight', color, square);
     }
 
-    getLegalMoves(){
-        this.legalMoves = [];
+    getPossibleMoves(){
+        this.moves = [];
         const [fromFile, fromRank] = getPosition(this.square);
         const knightMoves = [   // All possible knight moves
             [fromFile + 2, fromRank + 1], [fromFile + 2, fromRank - 1],
@@ -357,20 +316,10 @@ class Knight extends Piece {
                 let toSquare = squares[files[file] + rank];
                 let move = new Move(this, this.square, toSquare);
                 if (toSquare && toSquare.isEmpty()){
-                    this.legalMoves.push(move);
-                    if (this.color === 'white'){
-                        whiteLegalMoves.push(move);
-                    } else {
-                        blackLegalMoves.push(move);
-                    }  
+                    this.moves.push(move);
                 } else if (toSquare.piece.color !== this.color){
                     move.setCapture();
-                    this.legalMoves.push(move);
-                    if (this.color === 'white'){
-                        whiteLegalMoves.push(move);
-                    } else {
-                        blackLegalMoves.push(move);
-                    }  
+                    this.moves.push(move);
                 }
             }
         });        
@@ -380,25 +329,11 @@ class Knight extends Piece {
 class Bishop extends Piece {
     constructor(color, square){
         super('bishop', color, square);
-        this.isRealBishop = true;
     }
 
-    setFalseBishop(){
-        this.isRealBishop = false;
-    }
-
-    getLegalMoves(){
-        this.legalMoves = [];
+    getPossibleMoves(){
+        this.moves = [];
         getLinearMoves(this, this.square, [[1, 1], [1, -1], [-1, 1], [-1, -1]]);
-        if (this.isRealBishop){
-            this.legalMoves.forEach(move => {
-                if (this.color === 'white'){
-                    whiteLegalMoves.push(move);
-                } else {
-                    blackLegalMoves.push(move);
-                }
-            });
-        }
     }
 }
 
@@ -407,38 +342,26 @@ class Queen extends Piece {
         super('queen', color, square);
     }
 
-    getLegalMoves(){
-        this.legalMoves = [];
+    getPossibleMoves(){
+        this.moves = [];
         const tempRook = new Rook(this.color, this.square);
-        tempRook.setFalseRook();
         const tempBishop = new Bishop(this.color, this.square);
-        tempBishop.setFalseBishop();
-        tempRook.getLegalMoves();
-        tempRook.legalMoves.forEach(move => {
+        tempRook.getPossibleMoves();
+        tempRook.moves.forEach(move => {
             const newMove = new Move(this, this.square, move.to);
             if (move.isCapture) {
                 newMove.setCapture();
             }
-            this.legalMoves.push(newMove);
-            if (this.color === 'white'){
-                whiteLegalMoves.push(newMove);
-            } else {
-                blackLegalMoves.push(newMove);
-            }
+            this.moves.push(newMove);
         });
 
-        tempBishop.getLegalMoves();
-        tempBishop.legalMoves.forEach(move => {
+        tempBishop.getPossibleMoves();
+        tempBishop.moves.forEach(move => {
             const newMove = new Move(this, this.square, move.to);
             if (move.isCapture) {
                 newMove.setCapture();
             }
-            this.legalMoves.push(newMove);
-            if (this.color === 'white'){
-                whiteLegalMoves.push(newMove);
-            } else {
-                blackLegalMoves.push(newMove);
-            }
+            this.moves.push(newMove);
         });
     }
 }
@@ -449,8 +372,8 @@ class King extends Piece {
         this.hasMoved = false;
     }
 
-    getLegalMoves(){
-        this.legalMoves = [];
+    getPossibleMoves(){
+        this.moves = [];
         const [fromFile, fromRank] = getPosition(this.square);
         const kingMoves = [     // All possible king moves
             [fromFile + 1, fromRank], [fromFile - 1, fromRank],
@@ -465,24 +388,20 @@ class King extends Piece {
                 let move = new Move(this, this.square, toSquare);
                 if (toSquare && toSquare.isEmpty()){
                     // No piece on the target square, add move
-                    this.legalMoves.push(move);
-                    if (this.color === 'white'){
-                        whiteLegalMoves.push(move);
-                    } else {
-                        blackLegalMoves.push(move);
-                    }  
+                    this.moves.push(move); 
                 } else if (toSquare.piece.color !== this.color){
                     // Piece of the opposite color on the target square, add capture
                     move.setCapture();
-                    if (this.color === 'white'){
-                        whiteLegalMoves.push(move);
-                    } else {
-                        blackLegalMoves.push(move);
-                    }  
                 }
             }
         });
     }
+
+    isInCheck() {
+        const opponentMoves = this.color === 'white' ? blackPossibleMoves : whitePossibleMoves;
+        return opponentMoves.some(move => move.to === this.square);
+    }
+
 }
 
 class Square {
@@ -672,6 +591,11 @@ function setStartingPosition() {
                 piece = new Queen(color, square);
             } else if (type === 'king') {
                 piece = new King(color, square);
+                if (color === 'white') {
+                    whiteKing = piece;
+                } else {
+                    blackKing = piece;
+                }
             }
 
             square.placePiece(piece);
@@ -706,6 +630,7 @@ function handlePieceClick(event){
             selectedPiece = piece;
             pieceImg.parentElement.style.backgroundColor = selectedPieceColor;
             console.log(`${piece.color} ${piece.type} selected on ${piece.square.id}`);
+            console.log(`Possible moves: ${selectedPiece.moves}`);
             console.log(`Legal moves: ${selectedPiece.legalMoves}`);
         } else if (piece.color !== sideToMove && selectedPiece) {
             // Try to capture an opponent's piece
@@ -789,7 +714,6 @@ function handleSquareClick(event){
     }
 }
 
-
 function deselectPiece() {
     if (selectedPiece) {
         const selectedSquare = document.getElementById(selectedPiece.square.id);
@@ -835,18 +759,41 @@ function getPosition(square) {
     return [file, rank];
 }
 
+function getAllPossibleMoves(capturedPiece){
+    whitePossibleMoves = [];
+    blackPossibleMoves = [];
+    whiteAlivePieces.forEach(function(piece){
+        if (piece !== capturedPiece){
+            piece.getPossibleMoves();
+            piece.moves.forEach(move => {
+                whitePossibleMoves.push(move);
+            });
+        }
+    });
+    blackAlivePieces.forEach(function(piece){
+        if (piece !== capturedPiece){
+            piece.getPossibleMoves();
+            piece.moves.forEach(move => {
+                blackPossibleMoves.push(move);
+            });
+        }
+    });
+}
+
 function getAllLegalMoves(){
     whiteLegalMoves = [];
     blackLegalMoves = [];
     whiteAlivePieces.forEach(function(piece){
-        piece.getLegalMoves();
+        piece.getPossibleMoves();
+        disallowIllegalMoves(piece);
     });
     blackAlivePieces.forEach(function(piece){
-        piece.getLegalMoves();
+        piece.getPossibleMoves();
+        disallowIllegalMoves(piece);
     });
 
-    console.log(whiteAlivePieces);
-    console.log(blackAlivePieces);
+    console.log(whiteLegalMoves);
+    console.log(blackLegalMoves);
 }
 
 function isLegalLinearMove(piece, toFile, toRank){
@@ -854,12 +801,12 @@ function isLegalLinearMove(piece, toFile, toRank){
     let move = new Move(piece, piece.square, square);
     if (square.isEmpty()){
         // No piece on the target square, add move and keep searching
-        piece.legalMoves.push(move);
+        piece.moves.push(move);
         return true;
     } else if (square.piece.color !== piece.color){
         // Piece of the opposite color on the target square, add move and stop searching
         move.setCapture();
-        piece.legalMoves.push(move);
+        piece.moves.push(move);
         return false;
     }
     // Piece of the same color on the target square, stop searching
@@ -880,12 +827,50 @@ function getLinearMoves(piece, fromSquare, directions) {
     });
 }
 
-function disallowIllegalKingMoves(piece){ //TODO
+function disallowIllegalMoves(piece){
+    const originalSquare = piece.square;
+    const validMoves = [];
 
-}
+    let counter = 0;
 
-function blundersCheck(){ //TODO check function
-    return false;
+    piece.moves.forEach(move => {
+        // Simulate the move
+        const targetSquare = move.to;
+        const capturedPiece = targetSquare.getPiece();
+        piece.square.removePiece();
+        if (capturedPiece) capturedPiece.square.removePiece();
+        targetSquare.placePiece(piece);
+
+        // Check if the king is in check
+        getAllPossibleMoves(capturedPiece);
+        const king = piece.color === 'white' ? whiteKing : blackKing;
+        const isKingInCheck = king.isInCheck();
+
+        // Revert the move
+        targetSquare.removePiece();
+        originalSquare.placePiece(piece);
+        if (capturedPiece) {
+            targetSquare.placePiece(capturedPiece);
+        }
+
+        // If the king is not in check, add the move to valid moves
+        if (!isKingInCheck) {
+            validMoves.push(move);
+        } else {
+            counter++;
+        }
+
+    });
+    if (counter > 0) console.log(`Removed ${counter} illegal moves for ${piece.type} on ${piece.square.id}`);
+
+    piece.legalMoves = validMoves;
+    validMoves.forEach(move => {
+        if (piece.color === 'white'){
+            whiteLegalMoves.push(move);
+        } else {
+            blackLegalMoves.push(move);
+        }
+    });
 }
 
 initializeChessboard();
