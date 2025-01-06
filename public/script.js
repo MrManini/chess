@@ -50,19 +50,19 @@ class Piece {
         if (enPassant) {
             move.setEnPassant();
         }
-        if (this.type === 'king' || this.type === 'rook'){
+        if (this.type === 'king' || this.type === 'rook') {
             this.hasMoved = true;
         }
-        if (promotion){
+        if (promotion) {
             move.setPromotion(promotion);
             let newPiece;
-            if (promotion === 'queen'){
+            if (promotion === 'queen') {
                 newPiece = new Queen(this.color, toSquare);
-            } else if (promotion === 'rook'){
+            } else if (promotion === 'rook') {
                 newPiece = new Rook(this.color, toSquare);
-            } else if (promotion === 'bishop'){
+            } else if (promotion === 'bishop') {
                 newPiece = new Bishop(this.color, toSquare);
-            } else if (promotion === 'knight'){
+            } else if (promotion === 'knight') {
                 newPiece = new Knight(this.color, toSquare);
             }
             this.promote(newPiece, toSquare);
@@ -95,10 +95,10 @@ class Piece {
         this.move(piece.square, true);
     }
 
-    captureEnPassant(pawn){
+    captureEnPassant(pawn) {
     }
 
-    checkLegalMove(move){
+    checkLegalMove(move) {
         const isLegalMove = this.legalMoves.some(legalMove =>
             move.piece === legalMove.piece &&
             move.from.id === legalMove.from.id &&
@@ -137,18 +137,18 @@ class Piece {
 }
 
 class Pawn extends Piece {
-    constructor(color, square){
+    constructor(color, square) {
         super('pawn', color, square);
     }
 
-    captureEnPassant(pawn){
+    captureEnPassant(pawn) {
         const direction = this.color === 'white' ? 1 : -1;
         const toSquare = squares[pawn.square.file + (parseInt(pawn.square.rank) + direction)];
         this.move(toSquare, true, true);
         pawn.die();
     }
 
-    promote(piece, square){
+    promote(piece, square) {
         if (this.color === 'white') {
             whiteAlivePieces.push(piece);
         } else {
@@ -164,7 +164,7 @@ class Pawn extends Piece {
         square.placePiece(piece);
     }
 
-    getPossibleMoves(){
+    getPossibleMoves() {
         const [fromFile, fromRank] = [files.indexOf(this.square.file), this.square.rank];
         this.moves = [];
         const direction = this.color === 'white' ? 1 : -1; // White moves "up", black "down"
@@ -172,9 +172,9 @@ class Pawn extends Piece {
         // One square forward
         if ( 
             toSquare.isEmpty()   // No piece on the target square
-        ){
+        ) {
             let move = new Move(this, this.square, toSquare); // Pawn moves one square forward
-            if (toSquare.rank === 1 || toSquare.rank === 8){
+            if (toSquare.rank === 1 || toSquare.rank === 8) {
                 move.setPromotion('queen');
                 this.moves.push(move);
                 move = new Move(this, this.square, toSquare);
@@ -197,7 +197,7 @@ class Pawn extends Piece {
             fromRank === (this.color === 'white' ? 2 : 7) &&  // Pawn is on the second (white) or seventh (black) rank
             toSquare.isEmpty() &&                             // No piece on the target square
             intermediateSquare.isEmpty()                      // No piece on the square directly in front of the pawn
-        ){
+        ) {
             let move = new Move(this, this.square, toSquare);  // Pawn moves two squares forward    
             this.moves.push(move);
         }
@@ -206,10 +206,10 @@ class Pawn extends Piece {
         if (
             toSquare &&                                   // Square to the left is not null
             toSquare.isOccupiedByEnemy(this.color)        // Enemy piece on the target square
-        ){
+        ) {
             let move = new Move(this, this.square, toSquare);  // Pawn captures to the left
             move.setCapture();
-            if (toSquare.rank === 1 || toSquare.rank === 8){
+            if (toSquare.rank === 1 || toSquare.rank === 8) {
                 move.setPromotion('queen');
                 this.moves.push(move);
                 move = new Move(this, this.square, toSquare);
@@ -236,7 +236,7 @@ class Pawn extends Piece {
             toSquare.isEmpty() &&                                       // No piece on the target square
             lastMove.to.file === files[fromFile - direction] &&         // The pawn moved to the square to the left of the current pawn
             lastMove.to.rank === fromRank                               // The pawn moved to the same rank as the current pawn
-        ){
+        ) {
             let move = new Move(this, this.square, toSquare);   // Pawn captures en passant to the left
             move.setCapture();
             move.setEnPassant();
@@ -247,10 +247,10 @@ class Pawn extends Piece {
         if (
             toSquare &&                                    // Square to the right is not null
             toSquare.isOccupiedByEnemy(this.color)         // Enemy piece on the target square
-        ){
+        ) {
             let move = new Move(this, this.square, toSquare);   // Pawn captures to the right
             move.setCapture();
-            if (toSquare.rank === 1 || toSquare.rank === 8){
+            if (toSquare.rank === 1 || toSquare.rank === 8) {
                 move.setPromotion('queen');
                 this.moves.push(move);
                 move = new Move(this, this.square, toSquare);
@@ -277,7 +277,7 @@ class Pawn extends Piece {
             toSquare.isEmpty() &&                                       // No piece on the target square
             lastMove.to.file === files[fromFile + direction] &&         // The pawn moved to the square to the right of the current pawn
             lastMove.to.rank === fromRank                               // The pawn moved to the same rank as the current pawn
-        ){
+        ) {
             let move = new Move(this, this.square, toSquare);   // Pawn captures en passant to the right
             move.setCapture();
             move.setEnPassant();
@@ -287,23 +287,23 @@ class Pawn extends Piece {
 }
 
 class Rook extends Piece {
-    constructor(color, square){
+    constructor(color, square) {
         super('rook', color, square);
         this.hasMoved = false;
     }
 
-    getPossibleMoves(){
+    getPossibleMoves() {
         this.moves = [];
         getLinearMoves(this, this.square, [[0, 1], [0, -1], [1, 0], [-1, 0]]);
     }
 }
 
 class Knight extends Piece {
-    constructor(color, square){
+    constructor(color, square) {
         super('knight', color, square);
     }
 
-    getPossibleMoves(){
+    getPossibleMoves() {
         this.moves = [];
         const [fromFile, fromRank] = getPosition(this.square);
         const knightMoves = [   // All possible knight moves
@@ -314,12 +314,12 @@ class Knight extends Piece {
         ];
         knightMoves.forEach((knightMove) => {
             const [file, rank] = knightMove;  
-            if (file >= 0 && file <= 7 && rank >= 1 && rank <= 8){
+            if (file >= 0 && file <= 7 && rank >= 1 && rank <= 8) {
                 let toSquare = squares[files[file] + rank];
                 let move = new Move(this, this.square, toSquare);
-                if (toSquare && toSquare.isEmpty()){
+                if (toSquare && toSquare.isEmpty()) {
                     this.moves.push(move);
-                } else if (toSquare.piece.color !== this.color){
+                } else if (toSquare.piece.color !== this.color) {
                     move.setCapture();
                     this.moves.push(move);
                 }
@@ -329,22 +329,22 @@ class Knight extends Piece {
 }
 
 class Bishop extends Piece {
-    constructor(color, square){
+    constructor(color, square) {
         super('bishop', color, square);
     }
 
-    getPossibleMoves(){
+    getPossibleMoves() {
         this.moves = [];
         getLinearMoves(this, this.square, [[1, 1], [1, -1], [-1, 1], [-1, -1]]);
     }
 }
 
 class Queen extends Piece {
-    constructor(color, square){
+    constructor(color, square) {
         super('queen', color, square);
     }
 
-    getPossibleMoves(){
+    getPossibleMoves() {
         this.moves = [];
         const tempRook = new Rook(this.color, this.square);
         const tempBishop = new Bishop(this.color, this.square);
@@ -369,12 +369,12 @@ class Queen extends Piece {
 }
 
 class King extends Piece {
-    constructor(color, square){
+    constructor(color, square) {
         super('king', color, square);
         this.hasMoved = false;
     }
 
-    getPossibleMoves(){
+    getPossibleMoves() {
         this.moves = [];
         const [fromFile, fromRank] = getPosition(this.square);
         const kingMoves = [     // All possible king moves
@@ -385,13 +385,13 @@ class King extends Piece {
         ];
         kingMoves.forEach((kingMove) => {
             const [file, rank] = kingMove;
-            if (file >= 0 && file <= 7 && rank >= 1 && rank <= 8){
+            if (file >= 0 && file <= 7 && rank >= 1 && rank <= 8) {
                 let toSquare = squares[files[file] + rank];
                 let move = new Move(this, this.square, toSquare);
-                if (toSquare && toSquare.isEmpty()){
+                if (toSquare && toSquare.isEmpty()) {
                     // No piece on the target square, add move
                     this.moves.push(move); 
-                } else if (toSquare.piece.color !== this.color){
+                } else if (toSquare.piece.color !== this.color) {
                     // Piece of the opposite color on the target square, add capture
                     move.setCapture();
                 }
@@ -405,12 +405,12 @@ class King extends Piece {
         return opponentMoves.some(move => move.to === this.square);
     }
 
-    isInCheckmate(){
+    isInCheckmate() {
         const sideToMoveLegalMoves = sideToMove === 'white' ? whiteLegalMoves : blackLegalMoves;
         return this.isInCheck() && sideToMoveLegalMoves.length === 0;
     }
 
-    isInStalemate(){
+    isInStalemate() {
         const sideToMoveLegalMoves = sideToMove === 'white' ? whiteLegalMoves : blackLegalMoves;
         return !this.isInCheck() && sideToMoveLegalMoves.length === 0;
     }
@@ -451,7 +451,7 @@ class Square {
 }
 
 class Move {
-    constructor(piece, from, to){
+    constructor(piece, from, to) {
         this.piece = piece;
         this.from = from;
         this.to = to;
@@ -465,19 +465,19 @@ class Move {
         this.disambiguateRank = null;
     }
 
-    setCapture(){
+    setCapture() {
         this.isCapture = true;
     }
     
-    setCheck(){
+    setCheck() {
         this.isCheck = true;
     }
 
-    setCheckmate(){
+    setCheckmate() {
         this.isCheckmate = true;
     }
 
-    setEnPassant(){
+    setEnPassant() {
         this.isEnPassant = true;
         const toSquare = this.to;
         const direction = this.piece.color === 'white' ? 1 : -1;
@@ -485,52 +485,52 @@ class Move {
         this.enPassantPawn = enPassantSquare.piece;
     }
 
-    setPromotion(piece){
+    setPromotion(piece) {
         this.piecePromoted = piece;
     }
 
-    setDisambiguateFile(file){
+    setDisambiguateFile(file) {
         this.disambiguateFile = file;
     }
 
-    setDisambiguateRank(rank){
+    setDisambiguateRank(rank) {
         this.disambiguateRank = rank;
     }
 
-    toString(){
+    toString() {
         let move = "";
         let pieceType = this.piece.type;
-        if(pieceType === 'king' && this.from.id[0] === 'e' && this.to.id[0] === 'g'){
+        if(pieceType === 'king' && this.from.id[0] === 'e' && this.to.id[0] === 'g') {
             move = 'O-O';
-        } else if(pieceType === 'king' && this.from.id[0] === 'e' && this.to.id[0] === 'c'){
+        } else if(pieceType === 'king' && this.from.id[0] === 'e' && this.to.id[0] === 'c') {
             move = 'O-O-O';
         } else {
             move = pieceNotation[pieceType];
-            if (this.disambiguateFile){
+            if (this.disambiguateFile) {
                 move += this.disambiguateFile;
             }
-            if (this.disambiguateRank){
+            if (this.disambiguateRank) {
                 move += this.disambiguateRank;
             }
-            if (this.isCapture && pieceType !== 'pawn'){
+            if (this.isCapture && pieceType !== 'pawn') {
                 move += 'x';
-            } else if (this.isCapture && pieceType === 'pawn'){
+            } else if (this.isCapture && pieceType === 'pawn') {
                 move += this.from.id[0] + 'x';
             }
-            if (this.isEnPassant){
+            if (this.isEnPassant) {
                 move += this.enPassantPawn.square.id;
                 move += ' e.p.';
             } else {
                 move += this.to.id;
             }
-            if (this.piecePromoted){
+            if (this.piecePromoted) {
                 move += '=' + pieceNotation[this.piecePromoted];
             }
         }
-        if (this.isCheck){
+        if (this.isCheck) {
             move += '+';
         }
-        if (this.isCheckmate){
+        if (this.isCheckmate) {
             move += '#';
         }
         return move;
@@ -628,7 +628,7 @@ function enablePieceMovement() {
     });
 }
 
-function handlePieceClick(event){
+function handlePieceClick(event) {
     event.stopPropagation();
     
     const pieceImg = event.target;
@@ -651,12 +651,12 @@ function handlePieceClick(event){
             let isLegalMove = selectedPiece.checkLegalMove(move);
             
             if (isLegalMove) {
-                if (selectedPiece.type === 'pawn' && (square.rank === 8 || square.rank === 1)){
+                if (selectedPiece.type === 'pawn' && (square.rank === 8 || square.rank === 1)) {
                     possiblePromotionMove = move;
                     console.log(move);
-                    if (square.rank === 8){
+                    if (square.rank === 8) {
                         whitePromotionMenu.style.visibility = 'visible';
-                    } else if (square.rank === 1){
+                    } else if (square.rank === 1) {
                         blackPromotionMenu.style.visibility = 'visible';
                     }
                 } else {
@@ -671,7 +671,7 @@ function handlePieceClick(event){
     }
 }
 
-function handleSquareClick(event){
+function handleSquareClick(event) {
     event.stopPropagation();
     
     if (selectedPiece) {
@@ -680,7 +680,7 @@ function handleSquareClick(event){
         let move = new Move(selectedPiece, selectedPiece.square, square);
         let isLegalMove = false;
         let enPassantMove = null;
-        if (selectedPiece.color === 'white'){
+        if (selectedPiece.color === 'white') {
             isLegalMove = whiteLegalMoves.some(legalMove =>
                 move.piece === legalMove.piece &&
                 move.from.id === legalMove.from.id &&
@@ -699,16 +699,16 @@ function handleSquareClick(event){
             move.piece === enPassantMove.piece &&
             move.from === enPassantMove.from &&
             move.to === enPassantMove.to
-        ){
+        ) {
             selectedPiece.captureEnPassant(enPassantMove.enPassantPawn);
             console.log(`Captured en passant on ${enPassantMove.piece.square.id}`);
-        } else if (isLegalMove){
+        } else if (isLegalMove) {
             // If a piece is selected, then a square is clicked, the piece moves to that square
-            if (selectedPiece.type === 'pawn' && (square.rank === 8 || square.rank === 1)){
+            if (selectedPiece.type === 'pawn' && (square.rank === 8 || square.rank === 1)) {
                 possiblePromotionMove = move;
-                if (square.rank === 8){
+                if (square.rank === 8) {
                     whitePromotionMenu.style.visibility = 'visible';
-                } else if (square.rank === 1){
+                } else if (square.rank === 1) {
                     blackPromotionMenu.style.visibility = 'visible';
                 }
             } else {
@@ -724,7 +724,7 @@ function handleSquareClick(event){
     }
 }
 
-function handleCheckmate(king){
+function handleCheckmate(king) {
     const otherSide = king.color === 'white' ? 'black' : 'white';
     console.log(`Checkmate! ${otherSide} wins!`);
     gameOver = true;
@@ -732,7 +732,7 @@ function handleCheckmate(king){
     kingSquareElement.style.backgroundColor = '#a81a0c';
 }
 
-function handleStalemate(){
+function handleStalemate() {
     console.log("Stalemate. It's a draw.");
     gameOver = true;
     whiteKingSquareElement = document.getElementById(whiteKing.square.id);
@@ -751,7 +751,7 @@ function deselectPiece() {
     }
 }
 
-function handlePromotionMenu(){
+function handlePromotionMenu() {
     document.querySelectorAll('.promotion-piece').forEach(piece => {
         piece.addEventListener('click', () => {
             const promotionType = piece.id;
@@ -785,19 +785,19 @@ function getPosition(square) {
     return [file, rank];
 }
 
-function getAllPossibleMoves(capturedPiece){
+function getAllPossibleMoves(capturedPiece) {
     whitePossibleMoves = [];
     blackPossibleMoves = [];
-    whiteAlivePieces.forEach(function(piece){
-        if (piece !== capturedPiece){
+    whiteAlivePieces.forEach(function(piece) {
+        if (piece !== capturedPiece) {
             piece.getPossibleMoves();
             piece.moves.forEach(move => {
                 whitePossibleMoves.push(move);
             });
         }
     });
-    blackAlivePieces.forEach(function(piece){
-        if (piece !== capturedPiece){
+    blackAlivePieces.forEach(function(piece) {
+        if (piece !== capturedPiece) {
             piece.getPossibleMoves();
             piece.moves.forEach(move => {
                 blackPossibleMoves.push(move);
@@ -806,27 +806,27 @@ function getAllPossibleMoves(capturedPiece){
     });
 }
 
-function getAllLegalMoves(){
+function getAllLegalMoves() {
     whiteLegalMoves = [];
     blackLegalMoves = [];
-    whiteAlivePieces.forEach(function(piece){
+    whiteAlivePieces.forEach(function(piece) {
         piece.getPossibleMoves();
         disallowIllegalMoves(piece);
     });
-    blackAlivePieces.forEach(function(piece){
+    blackAlivePieces.forEach(function(piece) {
         piece.getPossibleMoves();
         disallowIllegalMoves(piece);
     });
 }
 
-function isLegalLinearMove(piece, toFile, toRank){
+function isLegalLinearMove(piece, toFile, toRank) {
     const square = squares[files[toFile] + toRank];
     let move = new Move(piece, piece.square, square);
-    if (square.isEmpty()){
+    if (square.isEmpty()) {
         // No piece on the target square, add move and keep searching
         piece.moves.push(move);
         return true;
-    } else if (square.piece.color !== piece.color){
+    } else if (square.piece.color !== piece.color) {
         // Piece of the opposite color on the target square, add move and stop searching
         move.setCapture();
         piece.moves.push(move);
@@ -850,7 +850,7 @@ function getLinearMoves(piece, fromSquare, directions) {
     });
 }
 
-function disallowIllegalMoves(piece){
+function disallowIllegalMoves(piece) {
     const originalSquare = piece.square;
     const validMoves = [];
 
@@ -886,7 +886,7 @@ function disallowIllegalMoves(piece){
 
     piece.legalMoves = validMoves;
     validMoves.forEach(move => {
-        if (piece.color === 'white'){
+        if (piece.color === 'white') {
             whiteLegalMoves.push(move);
         } else {
             blackLegalMoves.push(move);
