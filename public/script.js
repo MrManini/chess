@@ -17,6 +17,7 @@ let whitePromotionMenu = document.getElementById('white-promotion');
 let blackPromotionMenu = document.getElementById('black-promotion');
 let whiteKing = null;
 let blackKing = null;
+let gameOver = false;
 const pieceNotation = {
     pawn: '',
     rook: 'R',
@@ -83,11 +84,10 @@ class Piece {
         console.log(pgn);
         lastMove = move;
         getAllLegalMoves();
-        if (whiteKing.isInCheck()){
-            console.log("White is in check");
-        } else if (blackKing.isInCheck()){
-            console.log("Black is in check");
-        }
+
+        const sideToMoveKing = sideToMove === 'white' ? whiteKing : blackKing;
+        if (sideToMoveKing.isInCheckmate()) handleCheckmate(sideToMoveKing);
+        if (sideToMoveKing.isInStalemate()) handleStalemate();
     }
 
     capture(piece) {
@@ -191,10 +191,12 @@ class Pawn extends Piece {
             }
         }
         toSquare = squares[files[fromFile] + (parseInt(fromRank) + 2 * direction)];
+        const intermediateSquare = squares[files[fromFile] + (parseInt(fromRank) + direction)];
         // Two squares forward
         if (
             fromRank === (this.color === 'white' ? 2 : 7) &&  // Pawn is on the second (white) or seventh (black) rank
-            toSquare.isEmpty()   // No piece on the target square
+            toSquare.isEmpty() &&                             // No piece on the target square
+            intermediateSquare.isEmpty()                      // No piece on the square directly in front of the pawn
         ){
             let move = new Move(this, this.square, toSquare);  // Pawn moves two squares forward    
             this.moves.push(move);
@@ -397,11 +399,21 @@ class King extends Piece {
         });
     }
 
-    isInCheck() {
+    isInCheck(capturedPiece = null) {
+        getAllPossibleMoves(capturedPiece);
         const opponentMoves = this.color === 'white' ? blackPossibleMoves : whitePossibleMoves;
         return opponentMoves.some(move => move.to === this.square);
     }
 
+    isInCheckmate(){
+        const sideToMoveLegalMoves = sideToMove === 'white' ? whiteLegalMoves : blackLegalMoves;
+        return this.isInCheck() && sideToMoveLegalMoves.length === 0;
+    }
+
+    isInStalemate(){
+        const sideToMoveLegalMoves = sideToMove === 'white' ? whiteLegalMoves : blackLegalMoves;
+        return !this.isInCheck() && sideToMoveLegalMoves.length === 0;
+    }
 }
 
 class Square {
@@ -621,7 +633,7 @@ function handlePieceClick(event){
     
     const pieceImg = event.target;
     const squareId = pieceImg.parentElement.id;
-    if (squareId != "white-promotion" && squareId != "black-promotion") {
+    if (!gameOver && squareId != "white-promotion" && squareId != "black-promotion") {
         const square = squares[squareId];
         const piece = square.getPiece();
         if (piece.color === sideToMove) {
@@ -701,8 +713,6 @@ function handleSquareClick(event){
                 }
             } else {
                 selectedPiece.move(square);
-                console.log(`moved to ${square.id}`);
-                console.log(`${sideToMove} to move`);
             }
         } else {
             // If a piece is selected, then a square is clicked, but it's not a legal move
@@ -714,12 +724,28 @@ function handleSquareClick(event){
     }
 }
 
+function handleCheckmate(king){
+    const otherSide = king.color === 'white' ? 'black' : 'white';
+    console.log(`Checkmate! ${otherSide} wins!`);
+    gameOver = true;
+    const kingSquareElement = document.getElementById(king.square.id);
+    kingSquareElement.style.backgroundColor = '#a81a0c';
+}
+
+function handleStalemate(){
+    console.log("Stalemate. It's a draw.");
+    gameOver = true;
+    whiteKingSquareElement = document.getElementById(whiteKing.square.id);
+    blackKingSquareElement = document.getElementById(blackKing.square.id);
+    whiteKingSquareElement.style.backgroundColor = '#cdd26b';
+    blackKingSquareElement.style.backgroundColor = '#cdd26b';
+}
+
 function deselectPiece() {
     if (selectedPiece) {
         const selectedSquare = document.getElementById(selectedPiece.square.id);
         selectedSquare.style.backgroundColor = "";
         selectedPiece = null;
-        console.log("piece deselected");
         whitePromotionMenu.style.visibility = 'hidden';
         blackPromotionMenu.style.visibility = 'hidden';
     }
@@ -791,9 +817,6 @@ function getAllLegalMoves(){
         piece.getPossibleMoves();
         disallowIllegalMoves(piece);
     });
-
-    console.log(whiteLegalMoves);
-    console.log(blackLegalMoves);
 }
 
 function isLegalLinearMove(piece, toFile, toRank){
@@ -842,9 +865,8 @@ function disallowIllegalMoves(piece){
         targetSquare.placePiece(piece);
 
         // Check if the king is in check
-        getAllPossibleMoves(capturedPiece);
         const king = piece.color === 'white' ? whiteKing : blackKing;
-        const isKingInCheck = king.isInCheck();
+        const isKingInCheck = king.isInCheck(capturedPiece);
 
         // Revert the move
         targetSquare.removePiece();
@@ -861,7 +883,6 @@ function disallowIllegalMoves(piece){
         }
 
     });
-    if (counter > 0) console.log(`Removed ${counter} illegal moves for ${piece.type} on ${piece.square.id}`);
 
     piece.legalMoves = validMoves;
     validMoves.forEach(move => {
