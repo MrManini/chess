@@ -1,0 +1,19 @@
+name: Update npm dependencies and restart pm2 process
+
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    build:
+        runs-on: default
+
+        steps:
+          - uses: actions/checkout@v2
+
+          - name: Install dependencies
+            run: npm install
+
+          - name: Restart chess page
+            run: pm2 restart chess
