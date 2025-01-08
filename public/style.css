@@ -62,6 +62,35 @@ img {
     visibility: hidden;
 }
 
-.show {
-    visibility: visible;
+@media (max-width: 768px) {
+    #chessboard {
+        width: 100vw;
+        height: 100vw;
+        grid-template-columns: repeat(8, 12.5vw);
+        grid-template-rows: repeat(8, 12.5vw);
+    }
+
+    #white-promotion, #black-promotion {
+        width: 100vw;
+        height: 12.5vw;
+    }
+}
+
+@media (max-width: 480px) {
+    #chessboard {
+        width: 100vw;
+        height: 100vw;
+        grid-template-columns: repeat(8, 12.5vw);
+        grid-template-rows: repeat(8, 12.5vw);
+    }
+
+    #white-promotion, #black-promotion {
+        width: 100vw;
+        height: 12.5vw;
+        padding: 1vh;
+    }
+
+    header h1 {
+        font-size: 5vw;
+    }
 }
