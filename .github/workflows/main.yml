@@ -16,4 +16,4 @@ jobs:
             run: npm install
 
           - name: Restart chess page
-            run: pm2 restart chess
+            run: sudo pm2 restart chess
