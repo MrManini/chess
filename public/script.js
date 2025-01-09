@@ -395,8 +395,8 @@ class King extends Piece {
                     this.moves.push(move); 
                 } else if (toSquare.piece.color !== this.color) {
                     // Piece of the opposite color on the target square, add capture
-                    this.moves.push(move);
                     move.setCapture();
+                    this.moves.push(move);
                 }
             }
         });
