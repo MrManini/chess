@@ -1,0 +1,50 @@
+import Piece from './Piece.js';
+
+export class King extends Piece {
+    constructor(color, square) {
+        super('king', color, square);
+        this.hasMoved = false;
+    }
+
+    getPossibleMoves() {
+        this.moves = [];
+        const [fromFile, fromRank] = getPosition(this.square);
+        const kingMoves = [     // All possible king moves
+            [fromFile + 1, fromRank], [fromFile - 1, fromRank],
+            [fromFile, fromRank + 1], [fromFile, fromRank - 1],
+            [fromFile + 1, fromRank + 1], [fromFile + 1, fromRank - 1],
+            [fromFile - 1, fromRank + 1], [fromFile - 1, fromRank - 1]
+        ];
+        kingMoves.forEach((kingMove) => {
+            const [file, rank] = kingMove;
+            if (file >= 0 && file <= 7 && rank >= 1 && rank <= 8) {
+                let toSquare = squares[files[file] + rank];
+                let move = new Move(this, this.square, toSquare);
+                if (toSquare && toSquare.isEmpty()) {
+                    // No piece on the target square, add move
+                    this.moves.push(move); 
+                } else if (toSquare.piece.color !== this.color) {
+                    // Piece of the opposite color on the target square, add capture
+                    move.setCapture();
+                    this.moves.push(move);
+                }
+            }
+        });
+    }
+
+    isInCheck(capturedPiece = null) {
+        getAllPossibleMoves(capturedPiece);
+        const opponentMoves = this.color === 'white' ? blackPossibleMoves : whitePossibleMoves;
+        return opponentMoves.some(move => move.to === this.square);
+    }
+
+    isInCheckmate() {
+        const sideToMoveLegalMoves = sideToMove === 'white' ? whiteLegalMoves : blackLegalMoves;
+        return this.isInCheck() && sideToMoveLegalMoves.length === 0;
+    }
+
+    isInStalemate() {
+        const sideToMoveLegalMoves = sideToMove === 'white' ? whiteLegalMoves : blackLegalMoves;
+        return !this.isInCheck() && sideToMoveLegalMoves.length === 0;
+    }
+}
