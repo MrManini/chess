@@ -63,25 +63,62 @@ img {
 }
 
 @media (max-width: 768px) {
+    #game{
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        flex: 2;
+    }
+    
+    
     #chessboard {
-        width: 100vw;
-        height: 100vw;
+        display: grid;
         grid-template-columns: repeat(8, 12.5vw);
         grid-template-rows: repeat(8, 12.5vw);
+        width: 100vw;
+        height: 100vw;
+    }
+
+    .square{
+        width: 12.5vw;
+        height: 12.5vw;
+        box-sizing: border-box;
     }
 
     #white-promotion, #black-promotion {
         width: 100vw;
         height: 12.5vw;
+        padding: 1vh;
+    }
+
+    header h1 {
+        font-size: 5vw;
     }
 }
 
 @media (max-width: 480px) {
+    #game{
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        flex: 2;
+    }
+    
+    
     #chessboard {
-        width: 100vw;
-        height: 100vw;
+        display: grid;
         grid-template-columns: repeat(8, 12.5vw);
         grid-template-rows: repeat(8, 12.5vw);
+        width: 100vw;
+        height: 100vw;
+    }
+
+    .square{
+        width: 12.5vw;
+        height: 12.5vw;
+        box-sizing: border-box;
     }
 
     #white-promotion, #black-promotion {
