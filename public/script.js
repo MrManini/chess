@@ -171,6 +171,7 @@ class Pawn extends Piece {
         let toSquare = squares[files[fromFile] + (parseInt(fromRank) + direction)];
         // One square forward
         if ( 
+            toSquare &&          // Square in front of the pawn is not null   
             toSquare.isEmpty()   // No piece on the target square
         ) {
             let move = new Move(this, this.square, toSquare); // Pawn moves one square forward
@@ -194,6 +195,7 @@ class Pawn extends Piece {
         const intermediateSquare = squares[files[fromFile] + (parseInt(fromRank) + direction)];
         // Two squares forward
         if (
+            toSquare &&                                       // Square two squares in front of the pawn is not null
             fromRank === (this.color === 'white' ? 2 : 7) &&  // Pawn is on the second (white) or seventh (black) rank
             toSquare.isEmpty() &&                             // No piece on the target square
             intermediateSquare.isEmpty()                      // No piece on the square directly in front of the pawn
