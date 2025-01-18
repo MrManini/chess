@@ -14,13 +14,13 @@ export class UI {
 
     enablePieceMovement() {
         // Add click event listener to all squares containing a piece
-        document.querySelectorAll('img').forEach(function(pieceImg) {
-            pieceImg.addEventListener('click', handlePieceClick);
+        document.querySelectorAll('img').forEach((pieceImg) => {
+            pieceImg.addEventListener('click', this.handlePieceClick);
         });
     
         // Add a click event listener to all squares
-        document.querySelectorAll('.square').forEach(function(squareImg) {
-            squareImg.addEventListener('click', handleSquareClick);
+        document.querySelectorAll('.square').forEach((squareImg) => {
+            squareImg.addEventListener('click', this.handleSquareClick);
         });
     }
 

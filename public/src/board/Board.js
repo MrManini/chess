@@ -87,7 +87,7 @@ export class Board {
                 }
     
                 square.placePiece(piece);
-                placeStartingPiece(piece, squareId);
+                this.placeStartingPiece(piece, squareId);
             });
         }
     }
