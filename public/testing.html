@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<head>
+    <title>Chess</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inria+Sans:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap" rel="stylesheet">
+    <link rel="icon" href="images/king-white.svg" type="image/svg">
+    <link rel="stylesheet" href="style.css"> 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <header id="title">
+        <h1>Chess</h1>
+    </header>
+    <div id="game">
+        <div id="white-promotion">
+            <img src="images/queen-white.svg" alt="queen" class="promotion-piece" id="queen">
+            <img src="images/rook-white.svg" alt="rook" class="promotion-piece" id="rook">
+            <img src="images/bishop-white.svg" alt="bishop" class="promotion-piece" id="bishop">
+            <img src="images/knight-white.svg" alt="knight" class="promotion-piece" id="knight">
+        </div>
+        <div id="chessboard"></div>
+        <div id="black-promotion">
+            <img src="images/queen-black.svg" alt="queen" class="promotion-piece" id="queen">
+            <img src="images/rook-black.svg" alt="rook" class="promotion-piece" id="rook">
+            <img src="images/bishop-black.svg" alt="bishop" class="promotion-piece" id="bishop">
+            <img src="images/knight-black.svg" alt="knight" class="promotion-piece" id="knight">
+        </div>
+    </div>
+    <script src="src/main.js"></script>
+</body>

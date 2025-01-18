@@ -107,7 +107,6 @@ export class Pawn extends Piece {
         ) {
             let move = new Move(this, this.square, toSquare);   // Pawn captures en passant to the left
             move.setCapture();
-            move.setEnPassant();
             this.moves.push(move);
         }
         toSquare = squares[files[fromFile + direction] + (parseInt(fromRank) + direction)];
@@ -148,7 +147,6 @@ export class Pawn extends Piece {
         ) {
             let move = new Move(this, this.square, toSquare);   // Pawn captures en passant to the right
             move.setCapture();
-            move.setEnPassant();
             this.moves.push(move);  
         }
     }

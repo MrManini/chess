@@ -1,16 +1,14 @@
 
 
 export class Move {
-    constructor(piece, from, to) {
+    constructor(piece, from, to, isCapture = false, piecePromoted = null) {
         this.piece = piece;
         this.from = from;
         this.to = to;
-        this.isCapture = false;
-        this.isCheck = false;
-        this.isCheckmate = false;
-        this.isEnPassant = false;
-        this.enPassantPawn = null;
-        this.piecePromoted = null;
+        this.isCapture = isCapture;
+        this.isCheck = null;
+        this.isCheckmate = null;
+        this.piecePromoted = piecePromoted;
         this.disambiguateFile = null;
         this.disambiguateRank = null;
     }
@@ -34,14 +32,6 @@ export class Move {
 
     setCheckmate() {
         this.isCheckmate = true;
-    }
-
-    setEnPassant() {
-        this.isEnPassant = true;
-        const toSquare = this.to;
-        const direction = this.piece.color === 'white' ? 1 : -1;
-        const enPassantSquare = squares[toSquare.file + (parseInt(toSquare.rank) - direction)];
-        this.enPassantPawn = enPassantSquare.piece;
     }
 
     setPromotion(piece) {
@@ -76,12 +66,7 @@ export class Move {
             } else if (this.isCapture && pieceType === 'pawn') {
                 move += this.from.id[0] + 'x';
             }
-            if (this.isEnPassant) {
-                move += this.enPassantPawn.square.id;
-                move += ' e.p.';
-            } else {
-                move += this.to.id;
-            }
+            move += this.to.id;
             if (this.piecePromoted) {
                 move += '=' + pieceNotation[this.piecePromoted];
             }

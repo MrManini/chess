@@ -121,7 +121,7 @@ export class UI {
                 let pawn = possiblePromotionMove.piece;
                 let square = possiblePromotionMove.to;
                 let capture = possiblePromotionMove.isCapture;
-                pawn.move(square, capture, false, promotionType);
+                pawn.move(square, capture, promotionType);
                 
                 whitePromotionMenu.style.visibility = 'hidden';
                 blackPromotionMenu.style.visibility = 'hidden';

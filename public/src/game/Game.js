@@ -1,4 +1,5 @@
 import { UI } from '../ui/UI.js';
+import { Move } from './Move.js';
 import { getAllLegalMoves } from './LegalMoves.js';
 
 export class Game {
@@ -22,6 +23,40 @@ export class Game {
         this.UI.enablePieceMovement();
         this.UI.handlePromotionMenu();
         getAllLegalMoves();
+    }
+
+    handlePieceMove(piece, toSquare, capture = false, enPassant = false, promotion = null) {
+        if (capture) {
+            piece.capture(toSquare.getPiece());
+        } else if (enPassant) {
+            piece.captureEnPassant(toSquare.getPiece());
+        } else {
+            piece.move(toSquare, capture, promotion);
+        }
+        this.UI.deselectPiece();
+
+        const move = new Move({
+            piece,
+            from: piece.square,
+            to: toSquare,
+            capture,
+            promotion
+        });
+
+        this.movesPlayed.push(move);
+        this.pgn.push(move.toString());
+        console.log(this.pgn);
+        this.lastMove = move;
+
+        this.switchTurns();
+        getAllLegalMoves();
+        const sideToMoveKing = sideToMove === 'white' ? whiteKing : blackKing;
+        if (sideToMoveKing.isInCheckmate()) handleCheckmate(sideToMoveKing);
+        if (sideToMoveKing.isInStalemate()) handleStalemate();
+    }
+
+    switchTurns() {
+        this.sideToMove = this.sideToMove === 'white' ? 'black' : 'white';
     }
 
     handleCheckmate(king) {

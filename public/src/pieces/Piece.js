@@ -11,23 +11,15 @@ export class Piece {
         this.legalMoves = [];
     }
 
-    move(toSquare, capture = false, enPassant = false, promotion = null) {
+    move(toSquare, promotion = null) {
         const currentSquare = document.getElementById(this.square.id);
         const targetSquareElement = document.getElementById(toSquare.id);
         const pieceImg = currentSquare.firstChild;
         
-        const move = new Move(this, this.square, toSquare);
-        if (capture) {
-            move.setCapture();
-        }
-        if (enPassant) {
-            move.setEnPassant();
-        }
         if (this.type === 'king' || this.type === 'rook') {
             this.hasMoved = true;
         }
         if (promotion) {
-            move.setPromotion(promotion);
             let newPiece;
             if (promotion === 'queen') {
                 newPiece = new Queen(this.color, toSquare);
@@ -49,18 +41,6 @@ export class Piece {
         
             targetSquareElement.appendChild(pieceImg);
         }
-
-        sideToMove = (sideToMove === 'white') ? 'black' : 'white';
-        deselectPiece();
-        movesPlayed.push(move);
-        pgn.push(move.toString());
-        console.log(pgn);
-        lastMove = move;
-        getAllLegalMoves();
-
-        const sideToMoveKing = sideToMove === 'white' ? whiteKing : blackKing;
-        if (sideToMoveKing.isInCheckmate()) handleCheckmate(sideToMoveKing);
-        if (sideToMoveKing.isInStalemate()) handleStalemate();
     }
 
     capture(piece) {
