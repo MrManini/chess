@@ -1,4 +1,4 @@
-import { Move } from '../board/Move.js';
+import { Move } from '../game/Move.js';
 
 export class UI {
 
