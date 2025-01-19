@@ -1,5 +1,3 @@
-
-
 export class Move {
     constructor(piece, from, to, isCapture = false, piecePromoted = null) {
         this.piece = piece;

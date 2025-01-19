@@ -30,4 +30,9 @@ export class Square {
     isOccupiedByFriendly(color) {
         return this.piece && this.piece.color === color;
     }
+
+    getPosition(){
+        const files = [a, b, c, d, e, f, g, h];
+        return [files.indexOf(this.file), parseInt(this.rank)];
+    }
 }

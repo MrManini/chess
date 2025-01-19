@@ -1,6 +1,8 @@
 import { Piece } from './Piece.js';
 import { Move } from '../game/Move.js';
+import Board from '../board/Board.js';
 
+let board;
 
 export class Pawn extends Piece {
     constructor(color, square) {
@@ -30,7 +32,9 @@ export class Pawn extends Piece {
         square.placePiece(piece);
     }
 
-    getPossibleMoves() {
+    getPossibleMoves(lastMove) {
+        if (!board) board = Board.getInstance();
+        const { files, squares } = board;
         const [fromFile, fromRank] = [files.indexOf(this.square.file), this.square.rank];
         this.moves = [];
         const direction = this.color === 'white' ? 1 : -1; // White moves "up", black "down"

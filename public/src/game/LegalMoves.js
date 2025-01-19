@@ -1,6 +1,20 @@
+import { Move } from './Move.js';
+import Board from '../board/Board.js';
+
+let board;
+
+function getBoardAttributes() {
+    board = Board.getInstance();
+    const { whiteAlivePieces, blackAlivePieces, whiteKing, blackKing, squares } = board;
+    return { whiteAlivePieces, blackAlivePieces, whiteKing, blackKing, squares };
+}
+
 export function getAllPossibleMoves(capturedPiece) {
-    whitePossibleMoves = [];
-    blackPossibleMoves = [];
+    const whitePossibleMoves = [];
+    const blackPossibleMoves = [];
+
+    const { whiteAlivePieces, blackAlivePieces } = getBoardAttributes();
+
     whiteAlivePieces.forEach(function(piece) {
         if (piece !== capturedPiece) {
             piece.getPossibleMoves();
@@ -17,22 +31,29 @@ export function getAllPossibleMoves(capturedPiece) {
             });
         }
     });
+
+    return { whitePossibleMoves, blackPossibleMoves };
 }
 
-export function getAllLegalMoves() {
-    whiteLegalMoves = [];
-    blackLegalMoves = [];
+export function getAllLegalMoves(lastMove) {
+    const whiteLegalMoves = [];
+    const blackLegalMoves = [];
+
+    const { whiteAlivePieces, blackAlivePieces, whiteKing, blackKing, squares } = getBoardAttributes();
+
     whiteAlivePieces.forEach(function(piece) {
-        piece.getPossibleMoves();
-        disallowIllegalMoves(piece);
+        piece.getPossibleMoves(lastMove);
+        disallowIllegalMoves(piece, whiteKing, blackKing, whiteLegalMoves, blackLegalMoves);
     });
     blackAlivePieces.forEach(function(piece) {
-        piece.getPossibleMoves();
-        disallowIllegalMoves(piece);
+        piece.getPossibleMoves(lastMove);
+        disallowIllegalMoves(piece, whiteKing, blackKing, whiteLegalMoves, blackLegalMoves);
     });
+
+    return { whiteLegalMoves, blackLegalMoves };
 }
 
-function isLegalLinearMove(piece, toFile, toRank) {
+function isLegalLinearMove(piece, toFile, toRank, squares) {
     const square = squares[files[toFile] + toRank];
     let move = new Move(piece, piece.square, square);
     if (square.isEmpty()) {
@@ -49,13 +70,13 @@ function isLegalLinearMove(piece, toFile, toRank) {
     return false;
 }
 
-export function getLinearMoves(piece, fromSquare, directions) {
-    const [fromFile, fromRank] = getPosition(fromSquare);
+export function getLinearMoves(piece, fromSquare, directions, squares) {
+    const [fromFile, fromRank] = fromSquare.getPosition();
     directions.forEach(direction => {
         let file = fromFile + direction[0];
         let rank = fromRank + direction[1];
         while (file >= 0 && file <= 7 && rank >= 1 && rank <= 8) {
-            let keepSearching = isLegalLinearMove(piece, file, rank);
+            let keepSearching = isLegalLinearMove(piece, file, rank, squares);
             if (!keepSearching) break;
             file += direction[0];
             rank += direction[1];
@@ -63,11 +84,9 @@ export function getLinearMoves(piece, fromSquare, directions) {
     });
 }
 
-function disallowIllegalMoves(piece) {
+function disallowIllegalMoves(piece, whiteKing, blackKing, whiteLegalMoves, blackLegalMoves) {
     const originalSquare = piece.square;
     const validMoves = [];
-
-    let counter = 0;
 
     piece.moves.forEach(move => {
         // Simulate the move
@@ -84,20 +103,14 @@ function disallowIllegalMoves(piece) {
         // Revert the move
         targetSquare.removePiece();
         originalSquare.placePiece(piece);
-        if (capturedPiece) {
-            targetSquare.placePiece(capturedPiece);
-        }
+        if (capturedPiece) targetSquare.placePiece(capturedPiece);
 
         // If the king is not in check, add the move to valid moves
-        if (!isKingInCheck) {
-            validMoves.push(move);
-        } else {
-            counter++;
-        }
-
+        if (!isKingInCheck) validMoves.push(move);
     });
 
     piece.legalMoves = validMoves;
+
     validMoves.forEach(move => {
         if (piece.color === 'white') {
             whiteLegalMoves.push(move);

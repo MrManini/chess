@@ -1,9 +1,10 @@
 import { Square } from './Square.js';
 import { Pawn, Rook, Knight, Bishop, Queen, King } from '../pieces/ImportPieces.js';
 
-export class Board {
+class Board {
 
     constructor() {
+        if (Board.instance) return Board.instance;
         this.squares = {};
         this.files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
         this.whiteAlivePieces = [];
@@ -12,6 +13,18 @@ export class Board {
         this.blackKing = null;
         this.initializeChessboard();
         this.setStartingPosition();
+        Board.instance = this;
+    }
+
+    static getInstance() {
+        if (!Board.instance) {
+            Board.instance = new Board();
+        }
+        return Board.instance;
+    }
+
+    static getSquares() {
+        return Board.getInstance().squares;
     }
 
     initializeChessboard() {
@@ -91,11 +104,6 @@ export class Board {
             });
         }
     }
-
-    getPosition(square) {
-        const id = square.id;
-        const file = this.files.indexOf(id[0]);
-        const rank = parseInt(id[1]);
-        return [file, rank];
-    }
 }
+
+export default Board;

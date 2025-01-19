@@ -7,7 +7,7 @@ export class Knight extends Piece {
 
     getPossibleMoves() {
         this.moves = [];
-        const [fromFile, fromRank] = getPosition(this.square);
+        const [fromFile, fromRank] = this.square.getPosition();
         const knightMoves = [   // All possible knight moves
             [fromFile + 2, fromRank + 1], [fromFile + 2, fromRank - 1],
             [fromFile - 2, fromRank + 1], [fromFile - 2, fromRank - 1],

@@ -9,9 +9,6 @@ export class Game {
         this.sideToMove = 'white';
         this.gameOver = false;
         this.UI = new UI(this);
-
-        this.whitePossibleMoves = [];
-        this.blackPossibleMoves = [];
         this.whiteLegalMoves = [];
         this.blackLegalMoves = [];
         this.lastMove = null;
@@ -22,7 +19,7 @@ export class Game {
     start() {
         this.UI.enablePieceMovement();
         this.UI.handlePromotionMenu();
-        getAllLegalMoves();
+        this.updateLegalMoves();
     }
 
     handlePieceMove(piece, toSquare, capture = false, enPassant = false, promotion = null) {
@@ -49,7 +46,7 @@ export class Game {
         this.lastMove = move;
 
         this.switchTurns();
-        getAllLegalMoves();
+        this.updateLegalMoves();
         const sideToMoveKing = sideToMove === 'white' ? whiteKing : blackKing;
         if (sideToMoveKing.isInCheckmate()) handleCheckmate(sideToMoveKing);
         if (sideToMoveKing.isInStalemate()) handleStalemate();
@@ -57,6 +54,12 @@ export class Game {
 
     switchTurns() {
         this.sideToMove = this.sideToMove === 'white' ? 'black' : 'white';
+    }
+
+    updateLegalMoves() {
+        const { whiteLegalMoves, blackLegalMoves } = getAllLegalMoves();
+        this.whiteLegalMoves = whiteLegalMoves;
+        this.blackLegalMoves = blackLegalMoves;
     }
 
     handleCheckmate(king) {

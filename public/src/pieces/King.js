@@ -1,4 +1,5 @@
 import { Piece } from './Piece.js';
+import { getAllPossibleMoves } from '../game/LegalMoves.js';
 
 export class King extends Piece {
     constructor(color, square) {
@@ -6,9 +7,9 @@ export class King extends Piece {
         this.hasMoved = false;
     }
 
-    getPossibleMoves() {
+    getPossibleMoves(squares) {
         this.moves = [];
-        const [fromFile, fromRank] = getPosition(this.square);
+        const [fromFile, fromRank] = this.square.getPostion();
         const kingMoves = [     // All possible king moves
             [fromFile + 1, fromRank], [fromFile - 1, fromRank],
             [fromFile, fromRank + 1], [fromFile, fromRank - 1],
