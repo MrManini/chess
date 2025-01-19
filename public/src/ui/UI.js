@@ -57,12 +57,12 @@ export class UI {
                             blackPromotionMenu.style.visibility = 'visible';
                         }
                     } else {
-                        this.selectedPiece.capture(piece);
+                        this.game.handlePieceMove(this.selectedPiece, piece.square, true);
                         console.log(`Captured ${piece.type} on ${piece.square.id}`);
                     }
                 } else {
                     // Not a legal move
-                    deselectPiece();
+                    this.deselectPiece();
                 }
             }
         }
@@ -78,26 +78,34 @@ export class UI {
             let move = new Move(this.selectedPiece, this.selectedPiece.square, square);
             let enPassantMove = null;
             let isLegalMove = this.selectedPiece.checkLegalMove(move);
-            enPassantMove = this.selectedPiece.find(legalMove => legalMove.isEnPassant);
+            const { whiteLegalMoves, blackLegalMoves } = this.game;
+
+            if (this.selectedPiece.color === 'white') {
+                enPassantMove = whiteLegalMoves.find(legalMove => legalMove.isEnPassant);
+            } else if (this.selectedPiece.color === 'black') {
+                enPassantMove = blackLegalMoves.find(legalMove => legalMove.isEnPassant);
+            }
             if (enPassantMove && enPassantMove.isEqualTo(move)) {
-                this.selectedPiece.captureEnPassant(enPassantMove.enPassantPawn);
+                this.game.handlePieceMove(this.selectedPiece, square, true, true);
                 console.log(`Captured en passant on ${enPassantMove.piece.square.id}`);
             } else if (isLegalMove) {
-                // If a piece is selected, then a square is clicked, the piece moves to that square
+                // If a piece is selected, then a square is clicked
+                // If it's a pawn move to the last rank, then show promotion menu
                 if (this.selectedPiece.type === 'pawn' && (square.rank === 8 || square.rank === 1)) {
                     this.possiblePromotionMove = move;
                     if (square.rank === 8) {
-                        whitePromotionMenu.style.visibility = 'visible';
+                        UI.whitePromotionMenu.style.visibility = 'visible';
                     } else if (square.rank === 1) {
-                        blackPromotionMenu.style.visibility = 'visible';
+                        UI.blackPromotionMenu.style.visibility = 'visible';
                     }
                 } else {
-                    this.selectedPiece.move(square);
+                    // If it's a legal move, then move the piece
+                    this.game.handlePieceMove(this.selectedPiece, square);
                 }
             } else {
                 // If a piece is selected, then a square is clicked, but it's not a legal move
                 console.log("Illegal move");
-                deselectPiece();
+                this.deselectPiece();
             }
         } else {
             console.log("No selected piece");
@@ -109,8 +117,8 @@ export class UI {
             const selectedSquare = document.getElementById(this.selectedPiece.square.id);
             selectedSquare.style.backgroundColor = "";
             this.selectedPiece = null;
-            whitePromotionMenu.style.visibility = 'hidden';
-            blackPromotionMenu.style.visibility = 'hidden';
+            UI.whitePromotionMenu.style.visibility = 'hidden';
+            UI.blackPromotionMenu.style.visibility = 'hidden';
         }
     }
 
@@ -121,7 +129,7 @@ export class UI {
                 let pawn = possiblePromotionMove.piece;
                 let square = possiblePromotionMove.to;
                 let capture = possiblePromotionMove.isCapture;
-                pawn.move(square, capture, promotionType);
+                this.game.handlePieceMove(pawn, square, capture, false, promotionType);
                 
                 whitePromotionMenu.style.visibility = 'hidden';
                 blackPromotionMenu.style.visibility = 'hidden';

@@ -1,5 +1,5 @@
 import { Piece } from './Piece.js';
-import { getAllPossibleMoves } from '../game/LegalMoves.js';
+import { getAllPossibleMoves, getAllLegalMoves } from '../game/LegalMoves.js';
 import { Move } from '../game/Move.js';
 import Board from '../board/Board.js';
 
@@ -46,13 +46,13 @@ export class King extends Piece {
         return opponentMoves.some(move => move.to === this.square);
     }
 
-    isInCheckmate() {
+    isInCheckmate(sideToMove) {
         const { whiteLegalMoves, blackLegalMoves } = getAllLegalMoves();
         const sideToMoveLegalMoves = sideToMove === 'white' ? whiteLegalMoves : blackLegalMoves;
         return this.isInCheck() && sideToMoveLegalMoves.length === 0;
     }
 
-    isInStalemate() {
+    isInStalemate(sideToMove) {
         const { whiteLegalMoves, blackLegalMoves } = getAllLegalMoves();
         const sideToMoveLegalMoves = sideToMove === 'white' ? whiteLegalMoves : blackLegalMoves;
         return !this.isInCheck() && sideToMoveLegalMoves.length === 0;

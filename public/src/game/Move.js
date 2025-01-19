@@ -1,23 +1,24 @@
 export class Move {
-    constructor(piece, from, to, isCapture = false, piecePromoted = null) {
+    constructor(piece, from, to, isCapture = false, isEnPassant = false, piecePromoted = null) {
         this.piece = piece;
         this.from = from;
         this.to = to;
         this.isCapture = isCapture;
-        this.isCheck = null;
-        this.isCheckmate = null;
+        this.isCheck = false;
+        this.isCheckmate = false;
+        this.isEnPassant = isEnPassant;
         this.piecePromoted = piecePromoted;
         this.disambiguateFile = null;
         this.disambiguateRank = null;
     }
 
-    pieceNotation = {
-        pawn: '',
-        rook: 'R',
-        knight: 'N',
-        bishop: 'B',
-        queen: 'Q',
-        king: 'K'
+    static pieceNotation = {
+        'pawn': '',
+        'rook': 'R',
+        'knight': 'N',
+        'bishop': 'B',
+        'queen': 'Q',
+        'king': 'K'
     };
 
     setCapture() {
@@ -30,6 +31,10 @@ export class Move {
 
     setCheckmate() {
         this.isCheckmate = true;
+    }
+
+    setEnPassant() {
+        this.isEnPassant = true;
     }
 
     setPromotion(piece) {
@@ -52,7 +57,7 @@ export class Move {
         } else if(pieceType === 'king' && this.from.id[0] === 'e' && this.to.id[0] === 'c') {
             move = 'O-O-O';
         } else {
-            move = pieceNotation[pieceType];
+            move = Move.pieceNotation[pieceType];
             if (this.disambiguateFile) {
                 move += this.disambiguateFile;
             }
@@ -66,7 +71,7 @@ export class Move {
             }
             move += this.to.id;
             if (this.piecePromoted) {
-                move += '=' + pieceNotation[this.piecePromoted];
+                move += '=' + Move.pieceNotation[this.piecePromoted];
             }
         }
         if (this.isCheck) {
