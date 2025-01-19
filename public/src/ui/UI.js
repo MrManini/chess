@@ -15,18 +15,18 @@ export class UI {
     enablePieceMovement() {
         // Add click event listener to all squares containing a piece
         document.querySelectorAll('img').forEach((pieceImg) => {
-            pieceImg.addEventListener('click', this.handlePieceClick);
+            pieceImg.addEventListener('click', this.handlePieceClick.bind(this));
         });
     
         // Add a click event listener to all squares
         document.querySelectorAll('.square').forEach((squareImg) => {
-            squareImg.addEventListener('click', this.handleSquareClick);
+            squareImg.addEventListener('click', this.handleSquareClick.bind(this));
         });
     }
 
     handlePieceClick(event) {
         event.stopPropagation();
-        const {gameOver, sideToMove} = this.game;
+        const { gameOver, sideToMove } = this.game;
         const squares = this.game.board.squares;
         const pieceImg = event.target;
         const squareId = pieceImg.parentElement.id;
@@ -35,7 +35,7 @@ export class UI {
             const piece = square.getPiece();
             if (piece.color === sideToMove) {
                 // Select the piece if it's the correct side's turn
-                deselectPiece();
+                this.deselectPiece();
                 this.selectedPiece = piece;
                 pieceImg.parentElement.style.backgroundColor = this.selectedPieceColor;
                 console.log(`${piece.color} ${piece.type} selected on ${piece.square.id}`);
