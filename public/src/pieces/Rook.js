@@ -1,4 +1,5 @@
 import { Piece } from './Piece.js';
+import { getLinearMoves } from '../game/LegalMoves.js';
 
 export class Rook extends Piece {
     constructor(color, square) {

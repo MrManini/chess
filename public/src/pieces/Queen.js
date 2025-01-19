@@ -1,4 +1,6 @@
 import { Piece } from './Piece.js';
+import { Rook, Bishop } from './ImportPieces.js';
+import { Move } from '../game/Move.js';
 
 export class Queen extends Piece {
     constructor(color, square) {

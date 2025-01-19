@@ -32,7 +32,7 @@ export class Square {
     }
 
     getPosition(){
-        const files = [a, b, c, d, e, f, g, h];
+        const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
         return [files.indexOf(this.file), parseInt(this.rank)];
     }
 }

@@ -1,4 +1,8 @@
 import { Piece } from './Piece.js';
+import { Move } from '../game/Move.js';
+import Board from '../board/Board.js';
+
+let board;
 
 export class Knight extends Piece {
     constructor(color, square) {
@@ -6,6 +10,8 @@ export class Knight extends Piece {
     }
 
     getPossibleMoves() {
+        if (!board) board = Board.getInstance();
+        const { files, squares } = board;
         this.moves = [];
         const [fromFile, fromRank] = this.square.getPosition();
         const knightMoves = [   // All possible knight moves

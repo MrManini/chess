@@ -5,8 +5,8 @@ let board;
 
 function getBoardAttributes() {
     board = Board.getInstance();
-    const { whiteAlivePieces, blackAlivePieces, whiteKing, blackKing, squares } = board;
-    return { whiteAlivePieces, blackAlivePieces, whiteKing, blackKing, squares };
+    const { whiteAlivePieces, blackAlivePieces, whiteKing, blackKing, squares, files} = board;
+    return { whiteAlivePieces, blackAlivePieces, whiteKing, blackKing, squares, files };
 }
 
 export function getAllPossibleMoves(capturedPiece) {
@@ -39,7 +39,7 @@ export function getAllLegalMoves(lastMove) {
     const whiteLegalMoves = [];
     const blackLegalMoves = [];
 
-    const { whiteAlivePieces, blackAlivePieces, whiteKing, blackKing, squares } = getBoardAttributes();
+    const { whiteAlivePieces, blackAlivePieces, whiteKing, blackKing } = getBoardAttributes();
 
     whiteAlivePieces.forEach(function(piece) {
         piece.getPossibleMoves(lastMove);
@@ -53,7 +53,8 @@ export function getAllLegalMoves(lastMove) {
     return { whiteLegalMoves, blackLegalMoves };
 }
 
-function isLegalLinearMove(piece, toFile, toRank, squares) {
+function isLegalLinearMove(piece, toFile, toRank) {
+    const { files, squares } = getBoardAttributes();
     const square = squares[files[toFile] + toRank];
     let move = new Move(piece, piece.square, square);
     if (square.isEmpty()) {
@@ -70,13 +71,14 @@ function isLegalLinearMove(piece, toFile, toRank, squares) {
     return false;
 }
 
-export function getLinearMoves(piece, fromSquare, directions, squares) {
+export function getLinearMoves(piece, fromSquare, directions) {
+    const { squares } = getBoardAttributes();
     const [fromFile, fromRank] = fromSquare.getPosition();
     directions.forEach(direction => {
         let file = fromFile + direction[0];
         let rank = fromRank + direction[1];
         while (file >= 0 && file <= 7 && rank >= 1 && rank <= 8) {
-            let keepSearching = isLegalLinearMove(piece, file, rank, squares);
+            let keepSearching = isLegalLinearMove(piece, file, rank);
             if (!keepSearching) break;
             file += direction[0];
             rank += direction[1];
