@@ -1,5 +1,5 @@
 import { Piece } from './Piece.js';
-import { getAllPossibleMoves, getAllLegalMoves } from '../game/LegalMoves.js';
+import { getAllPossibleMoves, getAllLegalMoves, computePossibleMoves } from '../game/LegalMoves.js';
 import { Move } from '../game/Move.js';
 import Board from '../board/Board.js';
 
@@ -9,6 +9,7 @@ export class King extends Piece {
     constructor(color, square) {
         super('king', color, square);
         this.hasMoved = false;
+        this.isInCheck = false;
     }
 
     getPossibleMoves() {
@@ -39,22 +40,23 @@ export class King extends Piece {
         });
     }
 
-    isInCheck(capturedPiece = null) {
-        const { whitePossibleMoves, blackPossibleMoves } = getAllPossibleMoves(capturedPiece);
+    computeCheck(capturedPiece = null, lastMove = null) {
+        computePossibleMoves(capturedPiece, lastMove);
+        const { whitePossibleMoves, blackPossibleMoves } = getAllPossibleMoves();
         if (!board) board = Board.getInstance();
         const opponentMoves = this.color === 'white' ? blackPossibleMoves : whitePossibleMoves;
-        return opponentMoves.some(move => move.to === this.square);
+        this.isInCheck = opponentMoves.some(move => move.to === this.square);
     }
 
     isInCheckmate(sideToMove) {
         const { whiteLegalMoves, blackLegalMoves } = getAllLegalMoves();
         const sideToMoveLegalMoves = sideToMove === 'white' ? whiteLegalMoves : blackLegalMoves;
-        return this.isInCheck() && sideToMoveLegalMoves.length === 0;
+        return this.isInCheck && sideToMoveLegalMoves.length === 0;
     }
 
     isInStalemate(sideToMove) {
         const { whiteLegalMoves, blackLegalMoves } = getAllLegalMoves();
         const sideToMoveLegalMoves = sideToMove === 'white' ? whiteLegalMoves : blackLegalMoves;
-        return !this.isInCheck() && sideToMoveLegalMoves.length === 0;
+        return !this.isInCheck && sideToMoveLegalMoves.length === 0;
     }
 }

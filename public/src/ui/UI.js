@@ -50,11 +50,10 @@ export class UI {
                 if (isLegalMove) {
                     if (this.selectedPiece.type === 'pawn' && (square.rank === 8 || square.rank === 1)) {
                         this.possiblePromotionMove = move;
-                        console.log(move);
                         if (square.rank === 8) {
-                            whitePromotionMenu.style.visibility = 'visible';
+                            UI.whitePromotionMenu.style.visibility = 'visible';
                         } else if (square.rank === 1) {
-                            blackPromotionMenu.style.visibility = 'visible';
+                            UI.blackPromotionMenu.style.visibility = 'visible';
                         }
                     } else {
                         this.game.handlePieceMove(this.selectedPiece, piece.square, true);
@@ -126,25 +125,25 @@ export class UI {
         document.querySelectorAll('.promotion-piece').forEach(piece => {
             piece.addEventListener('click', () => {
                 const promotionType = piece.id;
-                let pawn = possiblePromotionMove.piece;
-                let square = possiblePromotionMove.to;
-                let capture = possiblePromotionMove.isCapture;
+                let pawn = this.possiblePromotionMove.piece;
+                let square = this.possiblePromotionMove.to;
+                let capture = this.possiblePromotionMove.isCapture;
                 this.game.handlePieceMove(pawn, square, capture, false, promotionType);
                 
-                whitePromotionMenu.style.visibility = 'hidden';
-                blackPromotionMenu.style.visibility = 'hidden';
+                UI.whitePromotionMenu.style.visibility = 'hidden';
+                UI.blackPromotionMenu.style.visibility = 'hidden';
                 console.log(`promoted to ${promotionType}`);
             });
         });
     
         document.addEventListener('click', (event) => {
             event.stopPropagation();
-            if (whitePromotionMenu.style.visibility === 'visible' && !whitePromotionMenu.contains(event.target)) {
-                whitePromotionMenu.style.visibility = 'hidden';
-                deselectPiece();
-            } else if (blackPromotionMenu.style.visibility === 'visible' && !blackPromotionMenu.contains(event.target)) {
-                blackPromotionMenu.style.visibility = 'hidden';
-                deselectPiece();
+            if (UI.whitePromotionMenu.style.visibility === 'visible' && !UI.whitePromotionMenu.contains(event.target)) {
+                UI.whitePromotionMenu.style.visibility = 'hidden';
+                this.deselectPiece();
+            } else if (UI.blackPromotionMenu.style.visibility === 'visible' && !UI.blackPromotionMenu.contains(event.target)) {
+                UI.blackPromotionMenu.style.visibility = 'hidden';
+                this.deselectPiece();
             }
         });
     }

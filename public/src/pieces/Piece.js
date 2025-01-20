@@ -1,5 +1,6 @@
-import { Move } from '../game/Move.js';
-import { Queen, Rook, Bishop, Knight } from './ImportPieces.js';
+import Board from '../board/Board.js';
+
+let board;
 
 export class Piece {
     constructor(type, color, square) {
@@ -11,7 +12,7 @@ export class Piece {
         this.legalMoves = [];
     }
 
-    move(toSquare, promotion = null) {
+    move(toSquare) {
         const currentSquare = document.getElementById(this.square.id);
         const targetSquareElement = document.getElementById(toSquare.id);
         const pieceImg = currentSquare.firstChild;
@@ -19,33 +20,20 @@ export class Piece {
         if (this.type === 'king' || this.type === 'rook') {
             this.hasMoved = true;
         }
-        if (promotion) {
-            let newPiece;
-            if (promotion === 'queen') {
-                newPiece = new Queen(this.color, toSquare);
-            } else if (promotion === 'rook') {
-                newPiece = new Rook(this.color, toSquare);
-            } else if (promotion === 'bishop') {
-                newPiece = new Bishop(this.color, toSquare);
-            } else if (promotion === 'knight') {
-                newPiece = new Knight(this.color, toSquare);
-            }
-            this.promote(newPiece, toSquare);
-        } else {
-            currentSquare.removeChild(pieceImg);
-            currentSquare.style.backgroundColor = "";
+
+        currentSquare.removeChild(pieceImg);
+        currentSquare.style.backgroundColor = "";
+
+        this.square.removePiece();
+        this.square = toSquare;
+        toSquare.placePiece(this);
     
-            this.square.removePiece();
-            this.square = toSquare;
-            toSquare.placePiece(this);
-        
-            targetSquareElement.appendChild(pieceImg);
-        }
+        targetSquareElement.appendChild(pieceImg);
     }
 
     capture(piece) {
         piece.die();
-        this.move(piece.square, true);
+        this.move(piece.square);
     }
 
     captureEnPassant(pawn) {
@@ -68,6 +56,8 @@ export class Piece {
     }
 
     die() {
+        if (!board) board = Board.getInstance();
+        const { whiteAlivePieces, blackAlivePieces } = board;
         this.square.removePiece();
         const pieceIndex = this.color === 'white' ? whiteAlivePieces.indexOf(this) : blackAlivePieces.indexOf(this);
         if (this.color === 'white') {

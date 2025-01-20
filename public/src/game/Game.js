@@ -1,6 +1,6 @@
 import { UI } from '../ui/UI.js';
 import { Move } from './Move.js';
-import { getAllLegalMoves } from './LegalMoves.js';
+import { getAllLegalMoves, computeLegalMoves } from './LegalMoves.js';
 
 export class Game {
     
@@ -23,9 +23,6 @@ export class Game {
     }
 
     handlePieceMove(piece, toSquare, capture = false, enPassant = false, promotion = null) {
-        console.log(`Piece object type: ${piece.constructor.name}`);
-        console.log(piece);
-        
         const move = new Move(
             piece,
             piece.square,
@@ -35,18 +32,23 @@ export class Game {
             promotion
         );
 
-        console.log(`Move object type: ${move.constructor.name}`);
-        console.log(move);
-
-        console.log(`Move piece object type: ${move.piece.constructor.name}`);
-        console.log(move.piece);
-
-        if (capture) {
+        if (enPassant) {
+            const { file, rank } = toSquare;
+            const direction = piece.color === 'white' ? 1 : -1;
+            const pawn = this.board.squares[file + (parseInt(rank) - direction)].getPiece();
+            piece.captureEnPassant(pawn);
+        } else if (promotion) {
+            const { newPiece, newPieceElement } = piece.promote(promotion, toSquare, capture);
+            if (this.color === 'white') {
+                this.board.whiteAlivePieces.push(newPiece);
+            } else {
+                this.board.blackAlivePieces.push(newPiece);
+            }
+            newPieceElement.addEventListener('click', this.UI.handlePieceClick.bind(this.UI));
+        } else if (capture) {
             piece.capture(toSquare.getPiece());
-        } else if (enPassant) {
-            piece.captureEnPassant(toSquare.getPiece());
         } else {
-            piece.move(toSquare, capture, promotion);
+            piece.move(toSquare, promotion);
         }
         this.UI.deselectPiece();
 
@@ -58,8 +60,8 @@ export class Game {
         this.switchTurns();
         this.updateLegalMoves();
         const sideToMoveKing = this.sideToMove === 'white' ? this.board.whiteKing : this.board.blackKing;
-        if (sideToMoveKing.isInCheckmate()) handleCheckmate(this.sideToMove, sideToMoveKing);
-        if (sideToMoveKing.isInStalemate()) handleStalemate(this.sideToMove);
+        if (sideToMoveKing.isInCheckmate(this.sideToMove)) handleCheckmate(this.sideToMove, sideToMoveKing);
+        if (sideToMoveKing.isInStalemate(this.sideToMove)) handleStalemate(this.sideToMove);
     }
 
     switchTurns() {
@@ -67,6 +69,7 @@ export class Game {
     }
 
     updateLegalMoves() {
+        computeLegalMoves(this.lastMove);
         const { whiteLegalMoves, blackLegalMoves } = getAllLegalMoves();
         this.whiteLegalMoves = whiteLegalMoves;
         this.blackLegalMoves = blackLegalMoves;

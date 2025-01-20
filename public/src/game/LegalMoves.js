@@ -2,6 +2,10 @@ import { Move } from './Move.js';
 import Board from '../board/Board.js';
 
 let board;
+let whiteLegalMoves = [];
+let blackLegalMoves = [];
+let whitePossibleMoves = [];
+let blackPossibleMoves = [];
 
 function getBoardAttributes() {
     board = Board.getInstance();
@@ -9,47 +13,48 @@ function getBoardAttributes() {
     return { whiteAlivePieces, blackAlivePieces, whiteKing, blackKing, squares, files };
 }
 
-export function getAllPossibleMoves(capturedPiece) {
-    const whitePossibleMoves = [];
-    const blackPossibleMoves = [];
-
+export function computePossibleMoves(capturedPiece, lastMove) {
     const { whiteAlivePieces, blackAlivePieces } = getBoardAttributes();
-
+    whitePossibleMoves = [];
     whiteAlivePieces.forEach(function(piece) {
         if (piece !== capturedPiece) {
-            piece.getPossibleMoves();
+            piece.getPossibleMoves(lastMove);
             piece.moves.forEach(move => {
                 whitePossibleMoves.push(move);
             });
         }
     });
+    blackPossibleMoves = [];
     blackAlivePieces.forEach(function(piece) {
         if (piece !== capturedPiece) {
-            piece.getPossibleMoves();
+            piece.getPossibleMoves(lastMove);
             piece.moves.forEach(move => {
                 blackPossibleMoves.push(move);
             });
         }
     });
+}
 
+export function getAllPossibleMoves(){
     return { whitePossibleMoves, blackPossibleMoves };
 }
 
-export function getAllLegalMoves(lastMove) {
-    const whiteLegalMoves = [];
-    const blackLegalMoves = [];
-
+export function computeLegalMoves(lastMove) {
     const { whiteAlivePieces, blackAlivePieces, whiteKing, blackKing } = getBoardAttributes();
-
+    whiteLegalMoves = [];
     whiteAlivePieces.forEach(function(piece) {
         piece.getPossibleMoves(lastMove);
-        disallowIllegalMoves(piece, whiteKing, blackKing, whiteLegalMoves, blackLegalMoves);
+        disallowIllegalMoves(piece, whiteKing, blackKing, lastMove);
     });
+    blackLegalMoves = [];
     blackAlivePieces.forEach(function(piece) {
         piece.getPossibleMoves(lastMove);
-        disallowIllegalMoves(piece, whiteKing, blackKing, whiteLegalMoves, blackLegalMoves);
+        disallowIllegalMoves(piece, whiteKing, blackKing, lastMove);
     });
+    computePossibleMoves(null, lastMove);
+}
 
+export function getAllLegalMoves(){
     return { whiteLegalMoves, blackLegalMoves };
 }
 
@@ -86,26 +91,43 @@ export function getLinearMoves(piece, fromSquare, directions) {
     });
 }
 
-function disallowIllegalMoves(piece, whiteKing, blackKing, whiteLegalMoves, blackLegalMoves) {
+function disallowIllegalMoves(piece, whiteKing, blackKing, lastMove) {
     const originalSquare = piece.square;
     const validMoves = [];
 
     piece.moves.forEach(move => {
+        // Obtain original check state
+        const king = piece.color === 'white' ? whiteKing : blackKing;
+        const originalCheckState = king.isInCheck;
+        
         // Simulate the move
         const targetSquare = move.to;
-        const capturedPiece = targetSquare.getPiece();
+        let capturedPiece;
+        let enPassantCaptureSquare;
+        if (move.isEnPassant) {
+            const direction = piece.color === 'white' ? 1 : -1;
+            enPassantCaptureSquare = board.squares[targetSquare.file + (parseInt(targetSquare.rank) - direction)];
+            capturedPiece = enPassantCaptureSquare.getPiece();
+        } else {
+            capturedPiece = targetSquare.getPiece();
+        }
         piece.square.removePiece();
         if (capturedPiece) capturedPiece.square.removePiece();
         targetSquare.placePiece(piece);
 
         // Check if the king is in check
-        const king = piece.color === 'white' ? whiteKing : blackKing;
-        const isKingInCheck = king.isInCheck(capturedPiece);
+        king.computeCheck(capturedPiece, lastMove);
+        const isKingInCheck = king.isInCheck;
 
         // Revert the move
         targetSquare.removePiece();
         originalSquare.placePiece(piece);
-        if (capturedPiece) targetSquare.placePiece(capturedPiece);
+        king.isInCheck = originalCheckState;
+        if (capturedPiece && enPassantCaptureSquare) {
+            enPassantCaptureSquare.placePiece(capturedPiece);
+        } else if (capturedPiece) {
+            targetSquare.placePiece(capturedPiece);
+        }
 
         // If the king is not in check, add the move to valid moves
         if (!isKingInCheck) validMoves.push(move);

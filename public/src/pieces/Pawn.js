@@ -1,6 +1,7 @@
 import { Piece } from './Piece.js';
 import { Move } from '../game/Move.js';
 import Board from '../board/Board.js';
+import { Queen, Rook, Bishop, Knight } from './ImportPieces.js';
 
 let board;
 
@@ -10,26 +11,34 @@ export class Pawn extends Piece {
     }
 
     captureEnPassant(pawn) {
+        if (!board) board = Board.getInstance();
+        const { squares } = board;
         const direction = this.color === 'white' ? 1 : -1;
         const toSquare = squares[pawn.square.file + (parseInt(pawn.square.rank) + direction)];
-        this.move(toSquare, true, true);
+        this.move(toSquare);
         pawn.die();
     }
 
-    promote(piece, square) {
-        if (this.color === 'white') {
-            whiteAlivePieces.push(piece);
-        } else {
-            blackAlivePieces.push(piece);
+    promote(promotion, square, capture = false) {
+        let newPiece;
+        if (promotion === 'queen') {
+            newPiece = new Queen(this.color, square);
+        } else if (promotion === 'rook') {
+            newPiece = new Rook(this.color, square);
+        } else if (promotion === 'bishop') {
+            newPiece = new Bishop(this.color, square);
+        } else if (promotion === 'knight') {
+            newPiece = new Knight(this.color, square);
         }
+
         this.die();
+        if (capture) square.getPiece().die();
         const squareElement = document.getElementById(square.id);
-        if (squareElement.firstChild) squareElement.removeChild(squareElement.firstChild);
-        const newPieceElement = piece.render();
+        const newPieceElement = newPiece.render();
         squareElement.appendChild(newPieceElement);
-        // Reattach event listener to the new piece's image element
-        newPieceElement.addEventListener('click', handlePieceClick);
-        square.placePiece(piece);
+        square.placePiece(newPiece);
+        
+        return { newPiece, newPieceElement };
     }
 
     getPossibleMoves(lastMove) {
@@ -108,7 +117,8 @@ export class Pawn extends Piece {
             toSquare &&                                                 // Square to the left is not null
             toSquare.isEmpty() &&                                       // No piece on the target square
             lastMove.to.file === files[fromFile - direction] &&         // The pawn moved to the square to the left of the current pawn
-            lastMove.to.rank === fromRank                               // The pawn moved to the same rank as the current pawn
+            lastMove.to.rank === fromRank &&                            // The pawn moved to the same rank as the current pawn
+            lastMove.piece.color !== this.color                         // The pawn is opposite color to the current pawn
         ) {
             let move = new Move(this, this.square, toSquare);   // Pawn captures en passant to the left
             move.setCapture();
@@ -150,7 +160,8 @@ export class Pawn extends Piece {
             toSquare &&                                                 // Square to the right is not null
             toSquare.isEmpty() &&                                       // No piece on the target square
             lastMove.to.file === files[fromFile + direction] &&         // The pawn moved to the square to the right of the current pawn
-            lastMove.to.rank === fromRank                               // The pawn moved to the same rank as the current pawn
+            lastMove.to.rank === fromRank &&                            // The pawn moved to the same rank as the current pawn
+            lastMove.piece.color !== this.color                         // The pawn is opposite color to the current pawn
         ) {
             let move = new Move(this, this.square, toSquare);   // Pawn captures en passant to the right
             move.setCapture();
