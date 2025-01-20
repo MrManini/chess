@@ -60,8 +60,9 @@ export class Game {
         this.switchTurns();
         this.updateLegalMoves();
         const sideToMoveKing = this.sideToMove === 'white' ? this.board.whiteKing : this.board.blackKing;
-        if (sideToMoveKing.isInCheckmate(this.sideToMove)) handleCheckmate(this.sideToMove, sideToMoveKing);
-        if (sideToMoveKing.isInStalemate(this.sideToMove)) handleStalemate(this.sideToMove);
+        sideToMoveKing.computeCheck(null, this.lastMove);
+        if (sideToMoveKing.isInCheckmate(this.sideToMove)) this.handleCheckmate(sideToMoveKing);
+        if (sideToMoveKing.isInStalemate(this.sideToMove)) this.handleStalemate();
     }
 
     switchTurns() {
@@ -78,16 +79,16 @@ export class Game {
     handleCheckmate(king) {
         const otherSide = king.color === 'white' ? 'black' : 'white';
         console.log(`Checkmate! ${otherSide} wins!`);
-        gameOver = true;
+        this.gameOver = true;
         const kingSquareElement = document.getElementById(king.square.id);
         kingSquareElement.style.backgroundColor = '#a81a0c';
     }
     
     handleStalemate() {
         console.log("Stalemate. It's a draw.");
-        gameOver = true;
-        whiteKingSquareElement = document.getElementById(whiteKing.square.id);
-        blackKingSquareElement = document.getElementById(blackKing.square.id);
+        this.gameOver = true;
+        const whiteKingSquareElement = document.getElementById(this.board.whiteKing.square.id);
+        const blackKingSquareElement = document.getElementById(this.board.blackKing.square.id);
         whiteKingSquareElement.style.backgroundColor = '#cdd26b';
         blackKingSquareElement.style.backgroundColor = '#cdd26b';
     }
