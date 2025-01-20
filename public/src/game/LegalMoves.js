@@ -99,7 +99,7 @@ function disallowIllegalMoves(piece, whiteKing, blackKing, lastMove) {
         // Obtain original check state
         const king = piece.color === 'white' ? whiteKing : blackKing;
         const originalCheckState = king.isInCheck;
-        
+
         // Simulate the move
         const targetSquare = move.to;
         let capturedPiece;

@@ -39,7 +39,7 @@ export class Game {
             piece.captureEnPassant(pawn);
         } else if (promotion) {
             const { newPiece, newPieceElement } = piece.promote(promotion, toSquare, capture);
-            if (this.color === 'white') {
+            if (piece.color === 'white') {
                 this.board.whiteAlivePieces.push(newPiece);
             } else {
                 this.board.blackAlivePieces.push(newPiece);
