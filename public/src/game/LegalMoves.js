@@ -108,6 +108,7 @@ export function getLinearMoves(piece, fromSquare, directions) {
 function disallowIllegalMoves(piece, whiteKing, blackKing, lastMove, moves) {
     const originalSquare = piece.square;
     const validMoves = [];
+    const { squares } = getBoardAttributes();
 
     piece.moves.forEach(move => {
         // Obtain original check state
@@ -117,6 +118,7 @@ function disallowIllegalMoves(piece, whiteKing, blackKing, lastMove, moves) {
 
         // Simulate the move
         const targetSquare = move.to;
+        if (move.castleType) console.log(move);
         let capturedPiece;
         let enPassantCaptureSquare;
         if (move.isEnPassant) {
@@ -148,14 +150,14 @@ function disallowIllegalMoves(piece, whiteKing, blackKing, lastMove, moves) {
         } else {
             let checkSquares;
             if (move.castleType === 'kingside') {
-                checkSquares = ['f' + targetSquare.rank, 'g' + targetSquare.rank];
+                checkSquares = [squares['f' + targetSquare.rank], squares['g' + targetSquare.rank]];
             } else {
-                checkSquares = ['c' + targetSquare.rank, 'd' + targetSquare.rank];
+                checkSquares = [squares['b' + targetSquare.rank], squares['c' + targetSquare.rank]];
             }
 
             isKingInCheck = checkSquares.some(square => {
                 piece.square.removePiece();
-                targetSquare.placePiece(piece);
+                square.placePiece(piece);
             
                 // Check if the king is in check
                 king.computeCheck(null, lastMove);

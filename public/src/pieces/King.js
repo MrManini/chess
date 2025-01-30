@@ -41,12 +41,14 @@ export class King extends Piece {
 
         let castleMove;
         if (this.canCastle('kingside')) {
-            castleMove = new Move(this, this.square, squares[files['g'] + fromRank]);
+            console.log(`${this.color} king can castle kingside`);
+            castleMove = new Move(this, this.square, squares['g' + this.square.rank]);
             castleMove.setCastle('kingside');
             this.moves.push(castleMove);
         }
         if (this.canCastle('queenside')) {
-            castleMove = new Move(this, this.square, squares[files['c'] + fromRank]);
+            console.log(`${this.color} king can castle queenside`);
+            castleMove = new Move(this, this.square, squares['c' + this.square.rank]);
             castleMove.setCastle('queenside');
             this.moves.push(castleMove);
         }
@@ -81,8 +83,19 @@ export class King extends Piece {
             rook = squares['a' + rank].getPiece();
         }
 
+        /*
+        console.log(`------------------ ${this.color} king can castle ${side} ------------------`);
+        console.log(`${this.color} king has moved: ${this.hasMoved}`);
+        console.log(`rook exists: ${rook}`);
+        if (rook) console.log(`rook has moved: ${rook.hasMoved}`);
+        console.log(`king is in check: ${this.isInCheck}`);
+        console.log(`empty squares are empty: ${emptySquares.every(square =>  square.isEmpty())}`);
+        emptySquares.forEach(square => console.log(square.isEmpty()));
+        console.log("Conclusion:");
+        console.log(!this.hasMoved && rook && !rook.hasMoved && !this.isInCheck && emptySquares.every(square => { square.isEmpty() }));
+        */
         return !this.hasMoved && rook && !rook.hasMoved && 
-                !this.isInCheck && emptySquares.every(square => { square.isEmpty() });
+                !this.isInCheck && emptySquares.every(square => square.isEmpty());
     }
 
     computeCheck(capturedPiece = null, lastMove = null) {
