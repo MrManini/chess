@@ -1,5 +1,5 @@
 export class Move {
-    constructor(piece, from, to, isCapture = false, isEnPassant = false, piecePromoted = null) {
+    constructor(piece, from, to, isCapture = false, isEnPassant = false, piecePromoted = null, castleType = null) {
         this.piece = piece;
         this.from = from;
         this.to = to;
@@ -8,6 +8,7 @@ export class Move {
         this.isCheckmate = false;
         this.isEnPassant = isEnPassant;
         this.piecePromoted = piecePromoted;
+        this.castleType = castleType;
         this.disambiguateFile = null;
         this.disambiguateRank = null;
     }
@@ -39,6 +40,10 @@ export class Move {
 
     setPromotion(piece) {
         this.piecePromoted = piece;
+    }
+
+    setCastle(type) {
+        this.castleType = type;
     }
 
     setDisambiguateFile(file) {

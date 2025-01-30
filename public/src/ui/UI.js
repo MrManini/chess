@@ -76,17 +76,29 @@ export class UI {
             const square = squares[squareImg.id];
             let move = new Move(this.selectedPiece, this.selectedPiece.square, square);
             let enPassantMove = null;
+            let kingsideCastle = null;
+            let queensideCastle = null;
             let isLegalMove = this.selectedPiece.checkLegalMove(move);
             const { whiteLegalMoves, blackLegalMoves } = this.game;
 
             if (this.selectedPiece.color === 'white') {
                 enPassantMove = whiteLegalMoves.find(legalMove => legalMove.isEnPassant);
+                kingsideCastle = whiteLegalMoves.find(legalMove => legalMove.castleType === 'kingside');
+                queensideCastle = whiteLegalMoves.find(legalMove => legalMove.castleType === 'queenside');
             } else if (this.selectedPiece.color === 'black') {
                 enPassantMove = blackLegalMoves.find(legalMove => legalMove.isEnPassant);
+                kingsideCastle = blackLegalMoves.find(legalMove => legalMove.castleType === 'kingside');
+                queensideCastle = blackLegalMoves.find(legalMove => legalMove.castleType === 'queenside');
             }
             if (enPassantMove && enPassantMove.isEqualTo(move)) {
                 this.game.handlePieceMove(this.selectedPiece, square, true, true);
                 console.log(`Captured en passant on ${enPassantMove.piece.square.id}`);
+            } else if(kingsideCastle && kingsideCastle.isEqualTo(move)) {
+                this.game.handlePieceMove(this.selectedPiece, square, false, false, null, 'kingside');
+                console.log(`Castled kingside`);
+            } else if(queensideCastle && queensideCastle.isEqualTo(move)) {
+                this.game.handlePieceMove(this.selectedPiece, square, false, false, null, 'queenside');
+                console.log(`Castled queenside`);
             } else if (isLegalMove) {
                 // If a piece is selected, then a square is clicked
                 // If it's a pawn move to the last rank, then show promotion menu

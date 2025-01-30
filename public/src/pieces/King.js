@@ -38,6 +38,51 @@ export class King extends Piece {
                 }
             }
         });
+
+        let castleMove;
+        if (this.canCastle('kingside')) {
+            castleMove = new Move(this, this.square, squares[files['g'] + fromRank]);
+            castleMove.setCastle('kingside');
+            this.moves.push(castleMove);
+        }
+        if (this.canCastle('queenside')) {
+            castleMove = new Move(this, this.square, squares[files['c'] + fromRank]);
+            castleMove.setCastle('queenside');
+            this.moves.push(castleMove);
+        }
+    }
+
+    castle(side) {
+        if (side === 'kingside') {
+            const rook = board.squares['h' + this.square.rank].getPiece();
+            const kingSquare = board.squares['g' + this.square.rank];
+            const rookSquare = board.squares['f' + this.square.rank];
+            this.move(kingSquare);
+            rook.move(rookSquare);
+        } else {
+            const rook = board.squares['a' + this.square.rank].getPiece();
+            const kingSquare = board.squares['c' + this.square.rank];
+            const rookSquare = board.squares['d' + this.square.rank];
+            this.move(kingSquare);
+            rook.move(rookSquare);
+        }
+    }
+
+    canCastle(side) {
+        let emptySquares;
+        const { files, squares } = board;
+        const [file, rank] = this.square.getPosition();
+        let rook;
+        if (side === 'kingside') {
+            emptySquares = [squares['f' + rank], squares['g' + rank]];
+            rook = squares['h' + rank].getPiece();
+        } else if (side === 'queenside') {
+            emptySquares = [squares['b' + rank], squares['c' + rank], squares['d' + rank]];
+            rook = squares['a' + rank].getPiece();
+        }
+
+        return !this.hasMoved && rook && !rook.hasMoved && 
+                !this.isInCheck && emptySquares.every(square => { square.isEmpty() });
     }
 
     computeCheck(capturedPiece = null, lastMove = null) {

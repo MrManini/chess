@@ -113,6 +113,7 @@ function disallowIllegalMoves(piece, whiteKing, blackKing, lastMove, moves) {
         // Obtain original check state
         const king = piece.color === 'white' ? whiteKing : blackKing;
         const originalCheckState = king.isInCheck;
+        let isKingInCheck;
 
         // Simulate the move
         const targetSquare = move.to;
@@ -125,22 +126,48 @@ function disallowIllegalMoves(piece, whiteKing, blackKing, lastMove, moves) {
         } else {
             capturedPiece = targetSquare.getPiece();
         }
-        piece.square.removePiece();
-        if (capturedPiece) capturedPiece.square.removePiece();
-        targetSquare.placePiece(piece);
+        
+        if (!move.castleType){
+            piece.square.removePiece();
+            if (capturedPiece) capturedPiece.square.removePiece();
+            targetSquare.placePiece(piece);
 
-        // Check if the king is in check
-        king.computeCheck(capturedPiece, lastMove);
-        const isKingInCheck = king.isInCheck;
+            // Check if the king is in check
+            king.computeCheck(capturedPiece, lastMove);
+            isKingInCheck = king.isInCheck;
 
-        // Revert the move
-        targetSquare.removePiece();
-        originalSquare.placePiece(piece);
-        king.isInCheck = originalCheckState;
-        if (capturedPiece && enPassantCaptureSquare) {
-            enPassantCaptureSquare.placePiece(capturedPiece);
-        } else if (capturedPiece) {
-            targetSquare.placePiece(capturedPiece);
+            // Revert the move
+            targetSquare.removePiece();
+            originalSquare.placePiece(piece);
+            king.isInCheck = originalCheckState;
+            if (capturedPiece && enPassantCaptureSquare) {
+                enPassantCaptureSquare.placePiece(capturedPiece);
+            } else if (capturedPiece) {
+                targetSquare.placePiece(capturedPiece);
+            }
+        } else {
+            let checkSquares;
+            if (move.castleType === 'kingside') {
+                checkSquares = ['f' + targetSquare.rank, 'g' + targetSquare.rank];
+            } else {
+                checkSquares = ['c' + targetSquare.rank, 'd' + targetSquare.rank];
+            }
+
+            isKingInCheck = checkSquares.some(square => {
+                piece.square.removePiece();
+                targetSquare.placePiece(piece);
+            
+                // Check if the king is in check
+                king.computeCheck(null, lastMove);
+                const inCheck = king.isInCheck;
+            
+                // Revert the move
+                square.removePiece();
+                originalSquare.placePiece(piece);
+                king.isInCheck = originalCheckState;
+            
+                return inCheck; // If at least one square results in check, returns true
+            });
         }
 
         // If the king is not in check, add the move to valid moves

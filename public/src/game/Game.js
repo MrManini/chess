@@ -22,14 +22,15 @@ export class Game {
         this.updateGameLegalMoves();
     }
 
-    handlePieceMove(piece, toSquare, capture = false, enPassant = false, promotion = null) {
+    handlePieceMove(piece, toSquare, capture = false, enPassant = false, promotion = null, castleType = null) {
         const move = new Move(
             piece,
             piece.square,
             toSquare,
             capture,
             enPassant,
-            promotion
+            promotion,
+            castleType
         );
 
         if (enPassant) {
@@ -47,6 +48,8 @@ export class Game {
             newPieceElement.addEventListener('click', this.UI.handlePieceClick.bind(this.UI));
         } else if (capture) {
             piece.capture(toSquare.getPiece());
+        } else if (castleType) {
+            piece.castle(castleType);
         } else {
             piece.move(toSquare, promotion);
         }
