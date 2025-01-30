@@ -1,5 +1,5 @@
 import { Piece } from './Piece.js';
-import { getAllPossibleMoves, getAllLegalMoves, computePossibleMoves } from '../game/LegalMoves.js';
+import { getAllPossibleMoves, getAllLegalMoves, updatePossibleMoves } from '../game/LegalMoves.js';
 import { Move } from '../game/Move.js';
 import Board from '../board/Board.js';
 
@@ -41,7 +41,7 @@ export class King extends Piece {
     }
 
     computeCheck(capturedPiece = null, lastMove = null) {
-        computePossibleMoves(capturedPiece, lastMove);
+        updatePossibleMoves(capturedPiece, lastMove);
         const { whitePossibleMoves, blackPossibleMoves } = getAllPossibleMoves();
         if (!board) board = Board.getInstance();
         const opponentMoves = this.color === 'white' ? blackPossibleMoves : whitePossibleMoves;

@@ -1,6 +1,6 @@
 import { UI } from '../ui/UI.js';
 import { Move } from './Move.js';
-import { getAllLegalMoves, computeLegalMoves } from './LegalMoves.js';
+import { getAllLegalMoves, updateLegalMoves } from './LegalMoves.js';
 
 export class Game {
     
@@ -19,7 +19,7 @@ export class Game {
     start() {
         this.UI.enablePieceMovement();
         this.UI.handlePromotionMenu();
-        this.updateLegalMoves();
+        this.updateGameLegalMoves();
     }
 
     handlePieceMove(piece, toSquare, capture = false, enPassant = false, promotion = null) {
@@ -58,7 +58,7 @@ export class Game {
         this.lastMove = move;
 
         this.switchTurns();
-        this.updateLegalMoves();
+        this.updateGameLegalMoves();
         const sideToMoveKing = this.sideToMove === 'white' ? this.board.whiteKing : this.board.blackKing;
         sideToMoveKing.computeCheck(null, this.lastMove);
         if (sideToMoveKing.isInCheckmate(this.sideToMove)) this.handleCheckmate(sideToMoveKing);
@@ -69,8 +69,8 @@ export class Game {
         this.sideToMove = this.sideToMove === 'white' ? 'black' : 'white';
     }
 
-    updateLegalMoves() {
-        computeLegalMoves(this.lastMove);
+    updateGameLegalMoves() {
+        updateLegalMoves(this.lastMove);
         const { whiteLegalMoves, blackLegalMoves } = getAllLegalMoves();
         this.whiteLegalMoves = whiteLegalMoves;
         this.blackLegalMoves = blackLegalMoves;

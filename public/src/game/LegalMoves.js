@@ -15,24 +15,32 @@ function getBoardAttributes() {
 
 export function computePossibleMoves(capturedPiece, lastMove) {
     const { whiteAlivePieces, blackAlivePieces } = getBoardAttributes();
-    whitePossibleMoves = [];
+    let whiteMoves = [];
     whiteAlivePieces.forEach(function(piece) {
         if (piece !== capturedPiece) {
             piece.getPossibleMoves(lastMove);
             piece.moves.forEach(move => {
-                whitePossibleMoves.push(move);
+                whiteMoves.push(move);
             });
         }
     });
-    blackPossibleMoves = [];
+    let blackMoves = [];
     blackAlivePieces.forEach(function(piece) {
         if (piece !== capturedPiece) {
             piece.getPossibleMoves(lastMove);
             piece.moves.forEach(move => {
-                blackPossibleMoves.push(move);
+                blackMoves.push(move);
             });
         }
     });
+
+    return { whiteMoves, blackMoves };
+}
+
+export function updatePossibleMoves(capturedPiece, lastMove) {
+    const { whiteMoves, blackMoves } = computePossibleMoves(capturedPiece, lastMove);
+    whitePossibleMoves = whiteMoves;
+    blackPossibleMoves = blackMoves;
 }
 
 export function getAllPossibleMoves(){
@@ -41,17 +49,23 @@ export function getAllPossibleMoves(){
 
 export function computeLegalMoves(lastMove) {
     const { whiteAlivePieces, blackAlivePieces, whiteKing, blackKing } = getBoardAttributes();
-    whiteLegalMoves = [];
+    let whiteMoves = [];
     whiteAlivePieces.forEach(function(piece) {
         piece.getPossibleMoves(lastMove);
-        disallowIllegalMoves(piece, whiteKing, blackKing, lastMove);
+        disallowIllegalMoves(piece, whiteKing, blackKing, lastMove, whiteMoves);
     });
-    blackLegalMoves = [];
+    let blackMoves = [];
     blackAlivePieces.forEach(function(piece) {
         piece.getPossibleMoves(lastMove);
-        disallowIllegalMoves(piece, whiteKing, blackKing, lastMove);
+        disallowIllegalMoves(piece, whiteKing, blackKing, lastMove, blackMoves);
     });
-    computePossibleMoves(null, lastMove);
+    return { whiteMoves, blackMoves };
+}
+
+export function updateLegalMoves(lastMove){
+    const { whiteMoves, blackMoves } = computeLegalMoves(lastMove);
+    whiteLegalMoves = whiteMoves;
+    blackLegalMoves = blackMoves;
 }
 
 export function getAllLegalMoves(){
@@ -91,7 +105,7 @@ export function getLinearMoves(piece, fromSquare, directions) {
     });
 }
 
-function disallowIllegalMoves(piece, whiteKing, blackKing, lastMove) {
+function disallowIllegalMoves(piece, whiteKing, blackKing, lastMove, moves) {
     const originalSquare = piece.square;
     const validMoves = [];
 
@@ -136,10 +150,6 @@ function disallowIllegalMoves(piece, whiteKing, blackKing, lastMove) {
     piece.legalMoves = validMoves;
 
     validMoves.forEach(move => {
-        if (piece.color === 'white') {
-            whiteLegalMoves.push(move);
-        } else {
-            blackLegalMoves.push(move);
-        }
+        moves.push(move);
     });
 }
